@@ -2386,14 +2386,20 @@ function renderScreen(name, params, dir) {
   }
   window.scrollTo(0, 0);
 }
+function closeOverlays() {
+  const mr = document.getElementById('modal-root');
+  if (mr) mr.innerHTML = '';
+}
 function navigate(name, params, opts) {
   opts = opts || {};
+  closeOverlays();
   stopAllTimers();
   navHistory.push({ name, params: params || {} });
   renderScreen(name, params || {}, opts.back ? 'back' : 'forward');
   AudioKit.play('buttonPress');
 }
 function goHome() {
+  closeOverlays();
   stopAllTimers();
   navHistory = [{ name: 'home', params: {} }];
   renderScreen('home', {}, 'back');
