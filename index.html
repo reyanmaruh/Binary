@@ -129,40 +129,36 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
 .icon-btn:hover{background:var(--color-polar);color:var(--color-graphite)}
 .icon-btn:active{transform:scale(.92)}
 
-/* ---------- HUD (kit: bordered state bar) ---------- */
+/* ---------- HUD (compact: XP · gems · hearts) ---------- */
 .hud{
-  display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--color-paper);
+  display:flex;align-items:stretch;gap:2px;padding:5px;background:var(--color-paper);
   border-radius:var(--radius-lg);border:2px solid var(--color-swan);box-shadow:0 2px 0 var(--color-swan);
-  margin-bottom:16px;flex-wrap:nowrap;
+  margin-bottom:18px;
 }
-.hud-item{display:flex;align-items:center;gap:5px;font-weight:700;font-size:18px;color:var(--color-graphite);font-variant-numeric:tabular-nums}
-.hud-item b{font-weight:700}
-.hud-item.streak span:first-child{color:var(--color-fox)}
-.hud-item.streak b{color:var(--color-fox)}
-.hud-item.speed span:first-child{color:var(--color-macaw-blue)}
-.hud-item.speed b{color:var(--color-macaw-blue)}
-.hud-item.gems span:first-child{color:var(--color-beetle)}
-.hud-item.gems b{color:var(--color-beetle)}
-.hud-item.hearts{margin-left:auto;gap:1px;color:var(--color-cardinal);border:none;background:none;padding:0;cursor:pointer;font-family:inherit;align-items:center}
-.hud-item.hearts:active{transform:scale(.94)}
-.heart-timer{font-size:10px;font-weight:700;color:var(--color-ash);letter-spacing:.2px;margin-left:5px;font-variant-numeric:tabular-nums}
-.heart{color:var(--color-cardinal);display:inline-block}
-.heart.empty{color:var(--color-swan)}
-.heart.lost{animation:heartPop .45s ease}
-@keyframes heartPop{0%{transform:scale(1)}35%{transform:scale(1.5) rotate(-8deg)}100%{transform:scale(1)}}
-.hud-item.hearts.low{animation:heartWarn 1.6s ease-in-out infinite}
-@keyframes heartWarn{0%,100%{opacity:1}50%{opacity:.5}}
-.flame{display:inline-block;transform-origin:50% 90%}
-.flame.active{animation:flicker 1.6s ease-in-out infinite}
-.flame.cold{filter:grayscale(1);opacity:.45}
-@keyframes flicker{0%,100%{transform:scale(1) rotate(-2deg)}30%{transform:scale(1.1) rotate(3deg)}60%{transform:scale(.96) rotate(-3deg)}80%{transform:scale(1.06) rotate(1deg)}}
-.hud-level{
-  display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.8px;
-  text-transform:uppercase;color:var(--color-ash);margin-left:auto;white-space:nowrap;
+.hud-stat{
+  display:flex;align-items:center;gap:6px;border:0;background:none;cursor:pointer;
+  font-family:inherit;font-weight:700;font-size:17px;color:var(--color-graphite);
+  font-variant-numeric:tabular-nums;padding:8px 10px;border-radius:12px;min-width:0;
+  transition:background .15s ease,transform .1s ease;
 }
-.hud-level b{font-size:12px;color:var(--color-graphite)}
-.hud-item.hearts + .hud-level{margin-left:0}
-.odo{display:inline-block;min-width:1.2ch;text-align:right}
+.hud-stat:active{transform:scale(.96)}
+.hud-stat:hover{background:var(--color-polar)}
+.hud-stat.xp{flex:1;background:var(--color-eel-light);color:var(--color-ecto-green-dark);padding-left:5px}
+.hud-stat.xp:hover{background:var(--color-lingot-lime)}
+.hud-stat .hud-ico{width:17px;height:17px;flex:0 0 auto}
+.hud-lv{
+  display:grid;place-items:center;width:24px;height:24px;border-radius:50%;flex:0 0 auto;
+  background:var(--color-ecto-green);color:var(--color-paper);font-size:11px;
+  box-shadow:0 2px 0 var(--color-ecto-green-dark);
+}
+.hud-stat .hud-num{font-size:19px;letter-spacing:-.02em;line-height:1}
+.hud-stat .hud-cap{font-size:10px;letter-spacing:.9px;font-weight:700;opacity:.55;margin-left:-2px}
+.hud-stat.xp .ico-fill{color:var(--color-bee-dark)}
+.hud-stat.gem{color:var(--color-beetle)}
+.hud-stat.heart{color:var(--color-cardinal)}
+.hud-stat.heart.low{animation:heartWarn 1.8s ease-in-out infinite}
+.hud-stat.bump{animation:hudXp .5s var(--spring)}
+@keyframes hudXp{0%{transform:none}40%{transform:scale(1.04)}100%{transform:none}}
 
 /* ---------- cards (kit) ---------- */
 .card{
@@ -196,6 +192,7 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
   transition:box-shadow .2s ease,transform .2s ease;
 }
 .section-banner.stuck{box-shadow:0 4px 0 var(--color-ecto-green-dark),0 14px 28px rgba(0,0,0,.16)}
+.section-banner::before{content:'';position:absolute;left:0;right:0;top:-12px;height:12px;background:var(--color-paper)}
 .section-banner .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;opacity:.92}
 .section-banner h2{font-size:22px;color:var(--color-paper);margin-top:2px;letter-spacing:-0.03em}
 .section-banner p{font-size:13px;font-weight:500;opacity:.94;margin-top:2px;line-height:1.4}
@@ -269,20 +266,22 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
   box-shadow:0 -8px 30px rgba(0,0,0,.12);transform:translateY(102%);
   transition:transform .35s cubic-bezier(0.34,1.56,0.64,1);
   max-width:720px;margin:0 auto;max-height:88dvh;overflow:auto;
+  scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior:contain;
 }
+.sheet::-webkit-scrollbar{display:none;width:0;height:0}
 .sheet::before{content:'';display:block;width:40px;height:4px;border-radius:2px;background:var(--color-swan);margin:0 auto 18px}
 .sheet.open{transform:none}
-.sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px}
 .sheet h2{font-size:24px;line-height:1.2}
 .sheet .sub{color:var(--color-ash);font-size:14px;font-weight:500;margin-top:2px}
-.sheet .stat-row{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 20px}
+.sheet .stat-row{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 16px}
 .sheet .stat-row .chip{
   display:inline-flex;align-items:center;gap:6px;background:var(--color-polar);border:2px solid var(--color-swan);
   border-radius:var(--pill);height:32px;padding:0 12px;font-size:12px;font-weight:700;color:var(--color-ash);
   letter-spacing:.3px;text-transform:uppercase;
 }
 .sheet .stat-row .chip .ico{width:14px;height:14px}
-.sheet .actions{display:flex;flex-direction:column;gap:10px}
+.sheet .actions{display:flex;flex-direction:column;gap:10px;margin-top:16px}
 
 /* ---------- theory ---------- */
 .theory{padding-top:8px}
@@ -349,8 +348,8 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
 
 /* ---------- player (kit: sim header / body / footer) ---------- */
 .player{padding:12px 16px 16px}
-.player-top{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--color-paper);
-  border:2px solid var(--color-swan);border-radius:var(--radius-lg);box-shadow:0 2px 0 var(--color-swan);margin-bottom:14px}
+.player-top{position:sticky;top:6px;z-index:30;display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--color-paper);
+  border:2px solid var(--color-swan);border-radius:var(--radius-lg);box-shadow:0 2px 0 var(--color-swan);margin-bottom:12px}
 .player-top .icon-btn{width:28px;height:28px;font-size:22px;color:var(--color-swan);color:#b9b9b9}
 .pbar-wrap{position:relative;flex:1;min-width:0}
 .pbar{display:flex;height:16px;width:100%;background:var(--color-swan);border-radius:var(--radius-pill);overflow:hidden}
@@ -366,8 +365,12 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
 .ghost{position:absolute;top:-24px;font-size:16px;transition:left .18s linear;filter:drop-shadow(0 1px 2px rgba(0,0,0,.15))}
 .ghost.ahead{color:var(--color-ecto-green-dark)}
 .ghost.behind{color:var(--color-fox)}
-.player-hearts{display:flex;align-items:center;gap:1px;font-size:17px;color:var(--color-cardinal);flex:0 0 auto;font-weight:700}
+.player-hearts{display:inline-flex;align-items:center;gap:5px;font-size:16px;color:var(--color-cardinal);flex:0 0 auto;font-weight:700;
+  padding:5px 10px;background:none;font-family:inherit;cursor:pointer;font-variant-numeric:tabular-nums}
 .player-hearts .ico{width:17px;height:17px}
+.player-hearts:active{transform:scale(.94)}
+.player-hearts.low{animation:heartWarn 1.8s ease-in-out infinite}
+.player-hearts .em{color:var(--color-ash)}
 .player-hearts .em{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--color-ash);display:inline-flex;align-items:center;gap:4px}
 .player-sub{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 4px;min-height:28px}
 .pill{
@@ -380,6 +383,9 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
 .pill.combo.fizzle{animation:fizzle .45s ease}
 .pill.timer.low{background:#fff0f0;border-color:#ffd1d1;color:var(--color-cardinal);animation:heartWarn 1s ease-in-out infinite}
 .pill.xp{background:#f3fbea;border-color:var(--color-eel-light);color:var(--color-ecto-green-dark)}
+.pill.xp .ico-fill{color:var(--color-bee-dark)}
+.pill.xp.bump{animation:xpBump .45s var(--spring)}
+@keyframes xpBump{0%{transform:none}40%{transform:scale(1.14)}100%{transform:none}}
 @keyframes fizzle{0%{transform:scale(1.1)}40%{transform:scale(.85) rotate(-6deg);opacity:.6}100%{transform:none;opacity:1}}
 .combo{display:inline-flex;align-items:center;gap:5px}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--pill);background:var(--color-polar);border:2px solid var(--color-swan);font-size:12px;font-weight:700;letter-spacing:.4px;color:var(--color-ash)}
@@ -517,7 +523,8 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
   letter-spacing:.5px;text-transform:uppercase}
 
 /* footer / hint */
-.player-foot{padding-top:10px}
+.player-foot{position:sticky;bottom:0;z-index:26;padding:10px 0 calc(10px + env(safe-area-inset-bottom));
+  background:var(--color-paper);box-shadow:0 -12px 20px rgba(255,255,255,.94)}
 .check-hint{text-align:center;font-size:11px;color:var(--ink-mute);margin-top:8px;font-weight:500;line-height:1.4}
 .check-hint kbd{background:var(--color-polar);border:2px solid var(--color-swan);border-radius:6px;padding:0 5px;
   font-family:inherit;font-size:10px;font-weight:700;color:var(--color-ash)}
@@ -548,7 +555,7 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
 .feedback.bad .btn.btn-primary{background:var(--color-cardinal);box-shadow:0 4px 0 var(--color-cardinal-dark)}
 
 /* ---------- results ---------- */
-.results{align-items:center;justify-content:center;text-align:center;gap:14px}
+.results{align-items:center;justify-content:center;text-align:center;gap:12px;padding-top:20px}
 .results h1{font-size:clamp(26px,6.4vw,34px);letter-spacing:-0.03em}
 .results .sub{color:var(--color-ash);font-size:16px;font-weight:500;max-width:360px;line-height:1.45}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:440px;margin-top:8px}
@@ -562,9 +569,22 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
 .stat-card.green .v{color:var(--color-ecto-green-dark)}
 .stat-card.purple .v{color:var(--color-macaw-blue)}
 .stat-card.amber .v{color:var(--color-fox)}
-.results .actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:360px;margin-top:8px}
-.result-stars{display:flex;gap:6px;justify-content:center;align-items:center;color:var(--color-bee);animation:popIn .5s var(--spring) both}
-.result-stars .off{opacity:.35;color:var(--color-swan)}
+.results .actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:360px;margin-top:10px}
+.result-stars{display:flex;gap:8px;justify-content:center;align-items:center;color:var(--color-bee);padding:2px 0 2px}
+.result-stars span{display:inline-block;animation:starPop .55s var(--spring) both}
+.result-stars span:nth-child(2){animation-delay:.13s}
+.result-stars span:nth-child(3){animation-delay:.26s}
+@keyframes starPop{0%{opacity:0;transform:scale(.4) rotate(-24deg)}60%{opacity:1;transform:scale(1.14) rotate(6deg)}100%{transform:none}}
+.result-stars .off{opacity:.35;color:var(--color-swan);animation:none}
+.result-stars .ico{width:44px;height:44px;filter:drop-shadow(0 3px 0 rgba(0,0,0,.07))}
+.result-stars .crown .ico{width:32px;height:32px;color:var(--color-bee-dark)}
+.gem-gain{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:var(--pill);
+  background:#F5EDFF;border:2px solid #E4D4FF;color:#7B3FD1;font-weight:700;font-size:19px;
+  animation:gemPop .6s var(--spring) both;font-variant-numeric:tabular-nums}
+.gem-gain .ico{width:22px;height:22px;animation:gemWiggle 1.8s ease-in-out .5s infinite}
+.gem-gain span{font-size:10px;letter-spacing:.9px;text-transform:uppercase;opacity:.7;align-self:flex-end;margin-bottom:3px}
+@keyframes gemPop{0%{opacity:0;transform:scale(.7) translateY(10px)}60%{opacity:1;transform:scale(1.06)}100%{transform:none}}
+@keyframes gemWiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg) scale(1.06)}75%{transform:rotate(10deg) scale(1.06)}}
 
 /* ---------- page head ---------- */
 .page-head{display:flex;align-items:flex-start;align-self:stretch;gap:4px;margin:2px 0 18px}
@@ -706,7 +726,7 @@ body.kbd :focus-visible{box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(28,176,246,.45)
 .node-practice[disabled]{opacity:.5;cursor:not-allowed;box-shadow:none;transform:none}
 
 /* ---------- lesson sheet: missions + payout rules ---------- */
-.missions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0 4px}
+.missions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 6px}
 .mission{
   background:var(--color-polar);border:2px solid var(--color-swan);
   border-radius:var(--radius-md);padding:12px 4px;text-align:center;min-width:0;
@@ -723,16 +743,7 @@ body.kbd :focus-visible{box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(28,176,246,.45)
 .mission.done span{color:var(--color-ecto-green-dark)}
 .mission.locked .m-ico{background:var(--color-polar);color:#c9c9c9}
 
-.payout{
-  background:var(--color-polar);border:2px solid var(--color-swan);border-radius:var(--radius-md);
-  padding:12px 14px;margin-top:14px;
-}
-.payout h4{font-size:10px;letter-spacing:1.1px;text-transform:uppercase;color:var(--color-ash);margin:0 0 8px}
-.payout ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
-.payout li{display:flex;gap:8px;align-items:flex-start;font-size:12px;font-weight:600;color:var(--color-graphite);line-height:1.4}
-.payout li .ico{width:14px;height:14px;margin-top:1px;color:var(--color-ecto-green-dark);flex:0 0 auto}
-.payout li.off{color:var(--color-ash)}
-.payout li.off .ico{color:var(--color-ash)}
+
 
 /* ---------- hearts modal ---------- */
 .hearts-modal{max-width:420px}
@@ -798,6 +809,30 @@ body.kbd :focus-visible{box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(28,176,246,.45)
   text-align:center;margin-top:14px;
 }
 
+/* ---------- floating continue ---------- */
+.fab{
+  position:fixed;right:max(20px,calc(50vw - 340px));bottom:calc(92px + env(safe-area-inset-bottom));z-index:35;
+  display:inline-flex;align-items:center;justify-content:center;width:60px;height:60px;padding:0;
+  border:2px solid var(--color-ecto-green-dark);border-radius:50%;background:var(--color-ecto-green);color:var(--color-paper);
+  box-shadow:0 6px 0 var(--color-ecto-green-dark),0 14px 26px rgba(88,204,2,.30);
+  cursor:pointer;animation:fabIn .42s var(--spring) both;
+}
+.fab .ico{width:26px;height:26px;margin-left:2px}
+.fab-id{
+  position:absolute;right:-6px;bottom:-4px;background:var(--color-paper);color:var(--color-ecto-green-dark);
+  border:2px solid var(--color-ecto-green-dark);border-radius:999px;padding:1px 6px;
+  font-style:normal;font-size:10px;font-weight:700;letter-spacing:.3px;line-height:1.4;
+}
+.fab:active{transform:translateY(4px);box-shadow:0 2px 0 var(--color-ecto-green-dark)}
+@keyframes fabIn{from{opacity:0;transform:translateY(16px) scale(.9)}to{opacity:1;transform:none}}
+
+/* ---------- settings rules ---------- */
+.rule-row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:2px solid var(--color-polar)}
+.rule-row:last-child{border-bottom:0;padding-bottom:2px}
+.rule-row .ico{width:18px;height:18px;margin-top:1px;color:var(--color-ecto-green-dark);flex:0 0 auto}
+.rule-row b{display:block;font-size:14px;line-height:1.3}
+.rule-row span{display:block;font-size:12px;color:var(--color-ash);line-height:1.45;margin-top:2px}
+
 /* ---------- small screens ---------- */
 @media (max-width:520px){
   .screen{padding:14px 16px 28px}
@@ -806,11 +841,12 @@ body.kbd :focus-visible{box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(28,176,246,.45)
   .hero{padding:18px;gap:14px}
   .hero .mascot{flex-basis:64px;width:64px;height:64px}
   .hero h1{font-size:20px}
-  .hud{padding:10px 12px;gap:10px}
-  .hud-item{font-size:16px}
-  .hud-item .ico{width:20px;height:20px}
-  .hud-item.hearts .ico{width:16px;height:16px}
-  .hud-level{font-size:10px}
+  .hud{padding:4px;gap:2px}
+  .hud-stat{font-size:16px;padding:7px 9px}
+  .hud-stat .hud-num{font-size:18px}
+  .hud-stat .hud-ico{width:16px;height:16px}
+  .hud-lv{width:22px;height:22px;font-size:10px}
+  .fab{right:16px;bottom:calc(84px + env(safe-area-inset-bottom))}
   .section-banner{padding:16px}
   .section-banner h2{font-size:20px}
   .theory-card{padding:20px}
@@ -830,9 +866,10 @@ body.kbd :focus-visible{box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(28,176,246,.45)
   .place{font-size:9px}
   .num-digit{min-width:38px;height:54px;font-size:28px}
   .num-ghost{min-width:38px;height:54px}
-  .hud{gap:8px;padding:10px}
-  .hud-item{font-size:15px}
-  .hud-level{display:none}
+  .hud{gap:1px;padding:4px}
+  .hud-stat{font-size:15px;padding:7px 8px}
+  .hud-stat .hud-cap{display:none}
+  .hud-lv{width:20px;height:20px;font-size:9.5px}
   .mcq-opt{font-size:16px;padding:14px 12px}
   .tab{font-size:9px;letter-spacing:.4px}
   .tab svg{width:23px;height:23px}
@@ -1026,8 +1063,7 @@ const STORE_KEY = 'binaryTrainer.v1';
 function defaultState() {
   return {
     xp: 0, level: 1, gems: 0, hearts: CONFIG.heartsMax, heartsRefilledAt: Date.now(),
-    streak: { count: 0, lastDay: null, freeze: 0 },
-    speedStreak: { count: 0, lastDay: null },
+    resume: null,
     lessons: {},
     srs: {},
     pbs: { dec2bin: null, bin2dec: null },
@@ -1048,8 +1084,7 @@ function loadState() {
     if (!raw) return base;
     const saved = JSON.parse(raw);
     const merged = Object.assign({}, base, saved);
-    merged.streak = Object.assign({}, base.streak, saved.streak || {});
-    merged.speedStreak = Object.assign({}, base.speedStreak, saved.speedStreak || {});
+    merged.resume = saved.resume && saved.resume.id ? saved.resume : null;
     merged.settings = Object.assign({}, base.settings, saved.settings || {});
     merged.pbs = Object.assign({}, base.pbs, saved.pbs || {});
     merged.stats = Object.assign({}, base.stats, saved.stats || {});
@@ -1169,22 +1204,6 @@ function modePaidToday(mode) {
 }
 function markModePaid(mode) {
   dailyBucket().modes[mode] = true;
-}
-function touchDailyStreak() {
-  const today = dayKey();
-  if (P.streak.lastDay === today) return false;
-  if (P.streak.lastDay && daysBetween(P.streak.lastDay, today) === 1) {
-    P.streak.count += 1;
-  } else if (P.streak.lastDay && daysBetween(P.streak.lastDay, today) > 1 && P.streak.freeze > 0) {
-    P.streak.freeze -= 1;
-    P.streak.count += 1;
-    toast('Streak freeze used — your streak is safe!');
-  } else {
-    P.streak.count = 1;
-  }
-  P.streak.lastDay = today;
-  save();
-  return true;
 }
 function awardXp(amount) {
   if (!amount) return { levelUp: false };
@@ -2039,11 +2058,12 @@ function mascotSVG(cls) {
 /* ---- inline SVG icons (no emoji dependency) ---- */
 const ICONS = {
   flame: '<path d="M12 2.6c3.6 4.1 6.4 6.4 6.4 10.3A6.4 6.4 0 0 1 5.6 13C5.6 9.2 8.6 6.9 12 2.6z"/>',
-  bolt: '<path d="M13 2.5 4.5 13.5H11l-1 8L19.5 10H13z"/>',
   gem: '<path d="M6.5 3h11l3.2 6-8.7 12L2.3 9z"/><path d="M2.8 9h18.4"/><path d="m8.6 3-2 6 5.4 12L17.4 9l-2-6"/>',
   heart: '<path d="M12 20.4S3.6 15 3.6 9.3A4.6 4.6 0 0 1 12 6.2a4.6 4.6 0 0 1 8.4 3.1c0 5.7-8.4 11.1-8.4 11.1z"/>',
   lock: '<rect x="4.6" y="10.4" width="14.8" height="10" rx="2.6"/><path d="M8 10.4V7.6a4 4 0 0 1 8 0v2.8"/>',
-  star: '<path d="M10.68 5.53Q14.65 8.36 17.74 8.74Q20.84 9.13 18.56 11.26Q16.28 13.39 16.87 16.46Q17.47 19.52 14.73 18.01Q12 16.5 9.27 18.01Q6.53 19.52 7.13 16.46Q7.72 13.39 5.44 11.26Q3.16 9.13 6.26 8.74Q9.35 8.36 10.68 5.53Z"/>',
+  star: '<path d="M11.56 4.07Q12.00 3.00 12.44 4.07L14.00 7.87Q14.44 8.94 15.59 9.03L19.69 9.34Q20.84 9.43 19.96 10.17L16.83 12.83Q15.95 13.58 16.22 14.71L17.19 18.70Q17.47 19.82 16.48 19.22L12.98 17.06Q12.00 16.45 11.02 17.06L7.52 19.22Q6.53 19.82 6.81 18.70L7.78 14.71Q8.05 13.58 7.17 12.83L4.04 10.17Q3.16 9.43 4.31 9.34L8.41 9.03Q9.56 8.94 10.00 7.87Z"/>',
+  xp: '<path d="M12 2.4c.9 5.1 3.6 7.8 8.7 8.7-5.1.9-7.8 3.6-8.7 8.7-.9-5.1-3.6-7.8-8.7-8.7 5.1-.9 7.8-3.6 8.7-8.7z"/>',
+  play: '<path d="M8 5.4v13.2L19 12z"/>',
   crown: '<path d="M3 8.6 7.5 12 12 5.2 16.5 12 21 8.6 19 19H5z"/>',
   target: '<circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="4.4"/><circle cx="12" cy="12" r="1"/>',
   ghost: '<path d="M5 21V10.2a7 7 0 0 1 14 0V21l-3.5-2.2L12 21l-3.5-2.2z"/><path d="M9.5 10.5h.01M14.5 10.5h.01"/>',
@@ -2364,8 +2384,10 @@ function flyXp(amount, fromEl) {
 
 /* ===== NAVIGATION ===== */
 let currentScreenName = 'home';
+let bootScrolled = false;
 
 function renderScreen(name, params, dir) {
+  document.querySelectorAll('body > .fab').forEach(n => n.remove());
   const node = SCREENS[name](params || {});
   if (!node) return;
   node.classList.add('screen');
@@ -2408,23 +2430,35 @@ function stopAllTimers() {
   if (typeof Player !== 'undefined' && Player) Player.stop();
 }
 function hudBar() {
-  const hearts = [];
-  for (let i = 0; i < CONFIG.heartsMax; i++) {
-    hearts.push('<span class="heart ' + (i < P.hearts ? '' : 'empty') + '">' + icon('heart', '', i < P.hearts) + '</span>');
-  }
-  const streakActive = P.streak.lastDay === dayKey();
   const wrap = el('div', { class: 'hud' });
-  wrap.innerHTML =
-    '<div class="hud-item streak" title="Daily streak" aria-label="Daily streak ' + P.streak.count + ' days"><span class="flame ' + (streakActive ? 'active' : 'cold') + '">' + icon('flame', '', true) + '</span><b>' + P.streak.count + '</b></div>' +
-    '<div class="hud-item speed" title="Speed streak" aria-label="Speed streak ' + P.speedStreak.count + ' days"><span>' + icon('bolt', '', true) + '</span><b>' + P.speedStreak.count + '</b></div>' +
-    '<div class="hud-item gems" title="Gems" aria-label="' + P.gems + ' gems"><span>' + icon('gem', '', true) + '</span><b>' + P.gems + '</b></div>' +
-    '<button type="button" class="hud-item hearts ' + (P.hearts <= 2 ? 'low' : '') + '" title="Hearts" aria-label="' + P.hearts + ' of ' + CONFIG.heartsMax + ' hearts — open timer" onclick="openHeartsModal()">' + hearts.join('') +
-      (P.hearts < CONFIG.heartsMax ? '<span class="heart-timer" data-heart-timer>' + fmtCountdown(nextHeartIn()) + '</span>' : '') +
-    '</button>' +
-    '<div class="hud-level" title="Level ' + P.level + ' · ' + P.xp + ' XP"><b>LV ' + P.level + '</b><span>' + P.xp + ' XP</span></div>';
+  const xpBtn = el('button', {
+    class: 'hud-stat xp', type: 'button',
+    'aria-label': 'Level ' + P.level + ', ' + P.xp + ' XP. Open stats',
+    onclick: () => navigate('profile')
+  });
+  xpBtn.innerHTML =
+    '<span class="hud-lv">' + P.level + '</span>' +
+    '<span class="hud-ico">' + icon('xp', '', true) + '</span>' +
+    '<b class="hud-num" data-hud-xp>' + P.xp + '</b><span class="hud-cap">XP</span>';
+  wrap.appendChild(xpBtn);
+
+  const gemBtn = el('button', {
+    class: 'hud-stat gem', type: 'button',
+    'aria-label': P.gems + ' gems',
+    onclick: () => toast('You have ' + P.gems + ' gems')
+  });
+  gemBtn.innerHTML = '<span class="hud-ico">' + icon('gem', '', true) + '</span><b>' + P.gems + '</b>';
+  wrap.appendChild(gemBtn);
+
+  const heartBtn = el('button', {
+    class: 'hud-stat heart' + (P.hearts <= 2 ? ' low' : ''), type: 'button',
+    'aria-label': P.hearts + ' of ' + CONFIG.heartsMax + ' hearts. Open timer',
+    onclick: () => openHeartsModal()
+  });
+  heartBtn.innerHTML = '<span class="hud-ico">' + icon('heart', '', P.hearts > 0) + '</span><b>' + P.hearts + '</b>';
+  wrap.appendChild(heartBtn);
   return wrap;
 }
-
 function starMarkup(stars, crown) {
   let s = '';
   for (let i = 0; i < 3; i++) s += '<span class="' + (i < stars ? '' : 'off') + '">' + icon('star', '', true) + '</span>';
@@ -2495,6 +2529,7 @@ function homeScreen() {
     const offset = Math.round(Math.sin(i * 1.15) * 30);
     const wrap = el('div', { class: 'node-wrap' });
     wrap.style.transform = 'translateX(' + offset + 'px)';
+    wrap.dataset.lesson = lesson.id;
     wrap.style.animationDelay = Math.min(i * 40, 360) + 'ms';
     const state = st && st.crown ? 'legendary' : done ? 'completed' : isCurrent ? 'active' : 'locked';
     const CHECK_SVG = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.6 4.6L19 6.6"/></svg>';
@@ -2503,12 +2538,12 @@ function homeScreen() {
       type: 'button',
       'aria-label': lesson.id + ' ' + lesson.title + (done ? ' (completed)' : unlocked ? ' (start)' : ' (locked)'),
       onclick: () => {
-        if (!unlocked) { AudioKit.play('wrong'); toast('Finish the previous lesson and its practice first'); return; }
+        if (!unlocked) { AudioKit.play('wrong'); openLockedSheet(i); return; }
         openLessonSheet(i);
       }
     });
     btn.innerHTML =
-      '<div class="node-icon">' + (st && st.crown ? icon('crown', '', true) : done ? CHECK_SVG : isCurrent ? icon('bolt', '', true) : icon('lock')) + '</div>' +
+      '<div class="node-icon">' + (st && st.crown ? icon('crown', '', true) : done ? CHECK_SVG : isCurrent ? icon('play', '', true) : icon('lock')) + '</div>' +
       '<div class="node-content"><div class="node-title">Lesson ' + lesson.id + '</div>' +
       '<div class="node-subtitle">' + esc(lesson.title) + '</div>' +
       (done ? starMarkup(st.stars || 0, false) : '') + '</div>';
@@ -2525,13 +2560,36 @@ function homeScreen() {
           navigate('player', { lessonId: lesson.id, mode: 'practice' });
         }
       });
-      pbtn.innerHTML = icon(practiced ? 'check' : 'bolt', '', true) + '<span>' + (practiced ? 'Practice passed' : 'Practice · required') + '</span>';
+      pbtn.innerHTML = icon(practiced ? 'check' : 'target') + '<span>' + (practiced ? 'Practice done' : 'Practice needed') + '</span>';
       wrap.appendChild(pbtn);
     }
     if (!isCurrent) wrap.appendChild(el('div', { class: 'node-tip', text: lesson.id + ' \u00b7 ' + lesson.title }));
     path.appendChild(wrap);
   });
   screen.appendChild(pathWrap);
+
+  const resume = resumeTarget();
+  const rSt = P.lessons[resume.lesson.id] || {};
+  const fab = el('button', {
+    class: 'fab', type: 'button',
+    'aria-label': allDone ? 'Open the practice hub' : 'Continue Lesson ' + resume.lesson.id,
+    onclick: () => { if (allDone) navigate('practice'); else openLessonSheet(resume.index); }
+  });
+  fab.innerHTML = icon('play', '', true) + '<i class="fab-id">' + (allDone ? '★' : esc(resume.lesson.id)) + '</i>';
+  fab.classList.toggle('practice', !allDone && rSt.completed && !rSt.practicePassed);
+  document.body.appendChild(fab);
+
+  if (!bootScrolled) {
+    bootScrolled = true;
+    setTimeout(() => {
+      const node = document.querySelector('.node-wrap[data-lesson="' + resume.lesson.id + '"]');
+      if (!node) return;
+      const rt = node.getBoundingClientRect().top;
+      if (rt > window.innerHeight * 0.8) {
+        window.scrollTo({ top: rt + window.scrollY - 168, behavior: reducedMotion() ? 'auto' : 'smooth' });
+      }
+    }, 460);
+  }
   requestAnimationFrame(() => requestAnimationFrame(() => drawPathLines(screen)));
   return screen;
 }
@@ -2567,6 +2625,35 @@ function drawPathLines(scope) {
   });
 }
 
+function resumeTarget() {
+  let i = P.resume && P.resume.id ? LESSONS.findIndex(l => l.id === P.resume.id) : -1;
+  if (i < 0) i = LESSONS.findIndex((l, idx) => isUnlocked(idx) && !((P.lessons[l.id] || {}).completed));
+  if (i < 0) i = LESSONS.findIndex(l => { const st = P.lessons[l.id]; return st && st.completed && !st.practicePassed; });
+  if (i < 0) i = LESSONS.length - 1;
+  return { index: i, lesson: LESSONS[i] };
+}
+
+function openLockedSheet(index) {
+  const lesson = LESSONS[index];
+  const prev = index > 0 ? LESSONS[index - 1] : null;
+  const st = prev ? (P.lessons[prev.id] || {}) : {};
+  let body;
+  if (!prev) body = 'Finish the lessons before this one to open it.';
+  else if (!st.completed) body = 'Finish Lesson ' + prev.id + ' first. Then pass its practice session at ' + pct(CONFIG.practiceGate) + ' accuracy to open Lesson ' + lesson.id + '.';
+  else body = 'Lesson ' + prev.id + ' is complete, but its practice session is not passed. Score ' + pct(CONFIG.practiceGate) + ' accuracy in practice to open Lesson ' + lesson.id + '.';
+  const actions = [];
+  if (prev) actions.push({
+    label: st.completed ? 'Practice ' + prev.id : 'Open ' + prev.id,
+    variant: 'primary',
+    onClick: () => {
+      if (st.completed) navigate('player', { lessonId: prev.id, mode: 'practice' });
+      else setTimeout(() => openLessonSheet(index - 1), 80);
+    }
+  });
+  actions.push({ label: 'Close', variant: 'secondary' });
+  openModal({ emoji: icon('lock'), title: 'Lesson ' + lesson.id + ' is locked', body, actions });
+}
+
 function openLessonSheet(index) {
   AudioKit.play('buttonPress');
   const lesson = LESSONS[index];
@@ -2574,7 +2661,6 @@ function openLessonSheet(index) {
   const practiced = !!st.practicePassed;
   const accGate = lesson.passCriteria.accuracy;
   const cpmGate = lesson.passCriteria.cpm || (CONFIG.cpm.dec2bin || [0, 0, 0, 0])[1];
-  const nextLesson = LESSONS[index + 1] || null;
   const root = document.getElementById('modal-root');
   const backdrop = el('div', { class: 'sheet-backdrop' });
   const sheet = el('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': lesson.title });
@@ -2597,7 +2683,7 @@ function openLessonSheet(index) {
   const stats = el('div', { class: 'stat-row' });
   stats.innerHTML =
     '<div class="chip">' + icon('star', '', true) + ' ' + (st.stars || 0) + '/3' + (st.crown ? ' ' + icon('crown', '', true) : '') + '</div>' +
-    '<div class="chip">' + icon('bolt', '', true) + ' Best ' + fmtCpm(st.bestCpm) + ' CPM</div>' +
+    '<div class="chip">' + icon('timer') + ' Best ' + fmtCpm(st.bestCpm) + ' CPM</div>' +
     '<div class="chip">' + icon('target') + ' ' + (st.bestAccuracy == null ? '—' : pct(st.bestAccuracy)) + '</div>';
   sheet.appendChild(stats);
 
@@ -2608,31 +2694,12 @@ function openLessonSheet(index) {
     m.innerHTML = '<div class="m-ico">' + icon(ok ? 'check' : ico, '', ok) + '</div><b>' + title + '</b><span>' + value + '</span>';
     return m;
   };
-  missions.appendChild(mission('target', 'Accuracy', pct(accGate) + ' or more', (st.bestAccuracy || 0) >= accGate));
-  missions.appendChild(mission('bolt', 'Speed', cpmGate + ' CPM', (st.bestCpm || 0) >= cpmGate));
-  missions.appendChild(mission('star', 'Stars', (st.stars || 0) + ' of 3', (st.stars || 0) >= 3));
-  missions.appendChild(mission('check', 'Practice', practiced ? 'passed' : 'required', practiced));
+  missions.appendChild(mission('target', 'Accuracy', pct(accGate), (st.bestAccuracy || 0) >= accGate));
+  missions.appendChild(mission('timer', 'Speed', cpmGate + ' CPM', (st.bestCpm || 0) >= cpmGate));
+  missions.appendChild(mission('check', 'Practice', practiced ? 'passed' : 'needed', practiced));
   sheet.appendChild(missions);
 
-  /* payout rules */
-  const payout = el('div', { class: 'payout' });
-  payout.innerHTML = '<h4>How rewards work</h4><ul>' +
-    '<li class="' + (st.paidClear ? 'off' : '') + '">' + icon(st.paidClear ? 'check' : 'gem', '', true) + '<span><b>First clear:</b> +' + lesson.xp + ' XP and +' + CONFIG.firstClearGems + ' gems — ' + (st.paidClear ? 'already claimed' : 'one time only') + '.</span></li>' +
-    '<li>' + icon('bolt', '', true) + '<span><b>Replay:</b> +' + Math.round(CONFIG.replayXpFactor * 100) + '% of the base XP and no gems.</span></li>' +
-    '<li>' + icon('trophy') + '<span><b>New personal best:</b> +' + CONFIG.pbGems + ' gems, once per day.</span></li>' +
-    '<li>' + icon('timer') + '<span><b>Daily cap:</b> ' + CONFIG.dailyXpCap + ' XP and ' + CONFIG.dailyGemCap + ' gems from lessons, practice and speed runs.</span></li>' +
-    '</ul>';
-  sheet.appendChild(payout);
-
-  if (nextLesson) {
-    const gate = el('div', { class: 'tiny muted mt3' });
-    gate.innerHTML = practiced
-      ? 'Practice passed — Lesson ' + nextLesson.id + ' is unlocked.'
-      : 'Pass the practice session at ' + pct(CONFIG.practiceGate) + ' accuracy to unlock Lesson ' + nextLesson.id + '.';
-    sheet.appendChild(gate);
-  }
-
-  const actions = el('div', { class: 'actions mt3' });
+  const actions = el('div', { class: 'actions' });
   actions.appendChild(el('button', {
     class: 'btn btn-primary block', type: 'button',
     text: done(st) ? 'Replay lesson' : 'Start lesson',
@@ -3207,6 +3274,7 @@ const Player = {
       else items = lesson.items.slice(0, CONFIG.sessionItemCap);
     }
     const isBoss = items.length === 1 && items[0].type === 'BOSS';
+    if (lesson && !isBoss) { P.resume = { id: lesson.id, mode: mode, at: Date.now() }; save(true); }
     this.s = {
       mode, lesson, lessonId: lesson ? lesson.id : null, items, idx: 0,
       isBoss, pool: isBoss ? items[0].pool : null,
@@ -3312,18 +3380,25 @@ const Player = {
     this.refs.pbar = el('div', { class: 'pbar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': '0', 'aria-label': 'Progress' });
     this.refs.pbarWrap.appendChild(this.refs.pbar);
     top.appendChild(this.refs.pbarWrap);
-    this.refs.hearts = el('div', { class: 'chip hearts player-hearts' });
+    this.refs.hearts = el('button', {
+      class: 'chip hearts player-hearts', type: 'button',
+      'aria-label': 'Hearts. Open refill timer',
+      onclick: () => openHeartsModal()
+    });
     top.appendChild(this.refs.hearts);
     root.appendChild(top);
 
     this.refs.metaRow = el('div', { class: 'player-sub' });
-    this.refs.count = el('div', { class: 'pill', text: '0 / 0' });
+    this.refs.count = null;
+    if (s.isBoss) {
+      this.refs.count = el('div', { class: 'pill', text: '0 correct' });
+      this.refs.metaRow.appendChild(this.refs.count);
+    }
     this.refs.combo = el('div', { class: 'pill combo off' });
     this.refs.timer = el('div', { class: 'pill timer' });
     this.refs.timer.innerHTML = icon('timer') + '<b>0:00</b>';
     this.refs.xp = el('div', { class: 'pill xp' });
-    this.refs.xp.innerHTML = icon('bolt', '', true) + '<b>0</b>';
-    this.refs.metaRow.appendChild(this.refs.count);
+    this.refs.xp.innerHTML = icon('xp', '', true) + '<b>0</b>';
     this.refs.metaRow.appendChild(this.refs.combo);
     this.refs.metaRow.appendChild(this.refs.timer);
     this.refs.metaRow.appendChild(this.refs.xp);
@@ -3348,17 +3423,19 @@ const Player = {
 
   paintHearts() {
     if (!this.refs.hearts) return;
-    if (this.s.mode !== 'lesson') {
-      const modeIcon = this.s.isBoss ? icon('flame', '', true) : this.s.mode === 'flash' ? icon('bolt', '', true) : icon('target');
-      this.refs.hearts.innerHTML = '<span class="em">' + modeIcon + ' ' + (this.s.isBoss ? 'Boss' : this.s.mode === 'flash' ? 'Flash' : 'Practice') + '</span>';
+    const s = this.s;
+    if (s.mode !== 'lesson') {
+      const label = s.isBoss ? 'Boss' : s.mode === 'flash' ? 'Flash' : s.mode === 'ghost' ? 'Ghost' : 'Practice';
+      const modeIcon = s.isBoss ? icon('flame', '', true) : s.mode === 'flash' ? icon('timer') : icon('target');
+      this.refs.hearts.innerHTML = '<span class="em">' + modeIcon + ' ' + label + '</span>';
       this.refs.hearts.classList.remove('low');
+      this.refs.hearts.style.pointerEvents = 'none';
       return;
     }
-    const parts = [];
-    for (let i = 0; i < CONFIG.heartsMax; i++) parts.push('<span class="heart ' + (i < P.hearts ? '' : 'empty') + '">' + (i < P.hearts ? '♥' : '♡') + '</span>');
-    this.refs.hearts.innerHTML = parts.join('');
+    this.refs.hearts.style.pointerEvents = '';
+    this.refs.hearts.innerHTML = icon('heart', '', P.hearts > 0) + '<b>' + P.hearts + '</b>';
     this.refs.hearts.classList.toggle('low', P.hearts <= 2);
-    this.refs.hearts.setAttribute('aria-label', P.hearts + ' of ' + CONFIG.heartsMax + ' hearts');
+    this.refs.hearts.setAttribute('aria-label', P.hearts + ' of ' + CONFIG.heartsMax + ' hearts. Open refill timer');
   },
 
   paintCombo() {
@@ -3384,6 +3461,7 @@ const Player = {
     if (!this.refs.xp) return;
     const b = this.refs.xp.querySelector('b');
     if (b) { b.textContent = String(this.s.xp); b.classList.remove('roll'); void b.offsetWidth; b.classList.add('roll'); }
+    this.refs.xp.classList.remove('bump'); void this.refs.xp.offsetWidth; this.refs.xp.classList.add('bump');
   },
 
   buildProgress() {
@@ -3448,7 +3526,6 @@ const Player = {
     this.refs.check.style.display = '';
     this.hideFeedback();
     this.markProgress();
-    this.refs.count.textContent = (s.idx + 1) + ' / ' + s.items.length;
     if (this.refs.ghost) this.refs.ghost.style.display = '';
 
     const renderer = renderExercise(ex, {
@@ -3534,7 +3611,7 @@ const Player = {
     s.bossEnd = performance.now() + s.bossDurationMs;
     s.bossCount = 0;
     AudioKit.play('bossStart');
-    this.refs.count.textContent = '0 correct';
+    if (this.refs.count) this.refs.count.textContent = '0 correct';
     this.showBossItem();
   },
 
@@ -3637,7 +3714,7 @@ const Player = {
       flyXp(gain, this.refs.check);
       if (s.isBoss) {
         s.bossCount++;
-        this.refs.count.textContent = s.bossCount + ' correct';
+        if (this.refs.count) this.refs.count.textContent = s.bossCount + ' correct';
         this.refs.slot.classList.add('flash-good');
         setTimeout(() => { if (this.refs.slot) this.refs.slot.classList.remove('flash-good'); }, 180);
         s.idx++;
@@ -3693,7 +3770,7 @@ const Player = {
     head.innerHTML = '<span class="icon">' + icon(good ? 'check' : 'cross') + '</span><span>' + (good ? 'Correct' : 'Not quite') + '</span>';
     if (good) {
       const xpChip = el('div', { class: 'fb-xp pop' });
-      xpChip.innerHTML = icon('bolt', '', true) + '<b>0</b><span>XP</span>';
+      xpChip.innerHTML = icon('xp', '', true) + '<b>0</b><span>XP</span>';
       head.appendChild(xpChip);
       animateCount(xpChip.querySelector('b'), s.xp, 560);
     }
@@ -3817,8 +3894,6 @@ const Player = {
             d.gemDays['pb:' + lesson.id] = true;
           }
         }
-        const streakGrew = touchDailyStreak();
-        if (streakGrew) AudioKit.play('streakMilestone');
       } else {
         lessonState(lesson.id).attempts = (lessonState(lesson.id).attempts || 0) + 1;
       }
@@ -3857,14 +3932,6 @@ const Player = {
       if (P.pbs[dir] == null || cpm > P.pbs[dir]) {
         if (P.pbs[dir] != null) pb = true;
         P.pbs[dir] = cpm;
-      }
-    }
-    if (pb) {
-      const today = dayKey();
-      if (P.speedStreak.lastDay !== today) {
-        const gap = P.speedStreak.lastDay ? daysBetween(P.speedStreak.lastDay, today) : Infinity;
-        P.speedStreak.count = gap === 1 ? P.speedStreak.count + 1 : 1;
-        P.speedStreak.lastDay = today;
       }
     }
     if (passed) {
@@ -3909,13 +3976,36 @@ function mascotBlock(cls) {
   return d;
 }
 
-function statCard(value, label, variant, delay) {
+function statCard(value, label, variant, delay, countTo, suffix, prefix) {
+  const v = el('div', { class: 'v', text: value });
+  if (countTo != null) {
+    v.dataset.to = String(countTo);
+    v.dataset.sfx = suffix || '';
+    v.dataset.pre = prefix || '';
+  }
   const c = el('div', { class: 'stat-card ' + (variant || '') }, [
-    el('div', { class: 'v', text: value }),
+    v,
     el('div', { class: 'l', text: label })
   ]);
   c.style.animationDelay = (delay || 0) + 'ms';
   return c;
+}
+
+function countUp(node, to, suffix, prefix, ms) {
+  if (!node) return;
+  const target = Math.max(0, Math.round(to));
+  const sfx = suffix || '';
+  const pre = prefix || '';
+  if (reducedMotion()) { node.textContent = pre + target + sfx; return; }
+  const start = performance.now();
+  const dur = ms || 760;
+  function step(now) {
+    const t = clamp((now - start) / dur, 0, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    node.textContent = pre + Math.round(target * eased) + sfx;
+    if (t < 1 && node.isConnected) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
 
 function resultsScreen(p) {
@@ -3929,7 +4019,7 @@ function resultsScreen(p) {
 
   screen.appendChild(mascotBlock(didPass ? 'celebrate' : 'worried'));
   let title = 'Session complete';
-  let sub = 'Good reps. Keep the streak alive.';
+  let sub = 'Nice work.';
   if (p.reason === 'failed') { title = 'Out of hearts.'; sub = 'Take a breath, then go again.'; }
   else if (p.mode === 'boss') { title = 'Boss run complete'; sub = '60 seconds of pure conversion.'; }
   else if (p.mode === 'flash') { title = 'Flash round done'; sub = 'Fast hands, fast brain.'; }
@@ -3937,15 +4027,13 @@ function resultsScreen(p) {
   else if (p.mode === 'practice') {
     title = didPass ? 'Practice passed!' : 'Practice not passed';
     sub = didPass
-      ? (nextLesson ? 'Nice — Lesson ' + nextLesson.id + ' is unlocked.' : 'Nice — every lesson is open.')
-      : 'You answered ' + pct(p.accuracy) + '. Practice needs ' + pct(p.accGate) + ' correct.';
+      ? (nextLesson ? 'Lesson ' + nextLesson.id + ' is unlocked.' : 'Every lesson is open.')
+      : 'You answered ' + pct(p.accuracy) + '.';
   }
-  else if (lesson && didPass) { title = 'Lesson complete!'; sub = lesson.title + ' · ' + lesson.subtitle; }
+  else if (lesson && didPass) { title = 'Lesson complete!'; sub = lesson.title; }
   else if (lesson) {
     title = 'Not passed yet';
-    sub = p.gateNote === 'cpm'
-      ? 'Accuracy was fine — you need ' + p.cpmGate + ' CPM to pass this one.'
-      : 'You answered ' + pct(p.accuracy) + ', below the ' + pct(p.accGate) + ' pass bar.';
+    sub = p.gateNote === 'cpm' ? 'Too slow this time.' : 'You answered ' + pct(p.accuracy) + '.';
   }
   screen.appendChild(el('h1', { text: title }));
   screen.appendChild(el('div', { class: 'sub', text: sub }));
@@ -3953,34 +4041,30 @@ function resultsScreen(p) {
   if (p.mode === 'lesson') {
     let stars = '';
     for (let i = 0; i < 3; i++) stars += '<span class="' + (i < p.stars ? '' : 'off') + '">' + icon('star', '', true) + '</span>';
-    screen.appendChild(el('div', { class: 'result-stars', html: stars + (p.crown ? icon('crown', '', true) : '') }));
-  }
-  if (p.pb) {
-    screen.appendChild(el('div', {
-      class: 'chip', style: { background: '#FFFBEB', borderColor: '#FDE68A', color: '#B45309' },
-      html: icon('trophy') + ' New personal best!' + (p.cpm != null ? ' ' + fmtCpm(p.cpm) + ' CPM' : '')
-    }));
+    if (p.crown) stars += '<span class="crown">' + icon('crown', '', true) + '</span>';
+    screen.appendChild(el('div', { class: 'result-stars', html: stars }));
   }
 
   const grid = el('div', { class: 'stat-grid' });
-  grid.appendChild(statCard(pct(p.accuracy), 'Accuracy', p.accuracy >= 0.9 ? 'green' : 'amber', 0));
+  grid.appendChild(statCard('0%', 'Accuracy', p.accuracy >= 0.9 ? 'green' : 'amber', 0, Math.round(p.accuracy * 100), '%'));
   grid.appendChild(statCard(p.cpm == null ? '—' : fmtCpm(p.cpm), 'CPM', 'purple', 60));
-  grid.appendChild(statCard('+' + p.xp, 'XP earned', 'green', 120));
+  grid.appendChild(statCard('+0', 'XP earned', 'green', 120, p.xp, '', '+'));
   grid.appendChild(statCard(p.mode === 'boss' ? String(p.bossCount || 0) : String(p.maxCombo || 0), p.mode === 'boss' ? 'Correct' : 'Best combo', '', 180));
   screen.appendChild(grid);
+  setTimeout(() => {
+    grid.querySelectorAll('.v[data-to]').forEach(n => countUp(n, Number(n.dataset.to), n.dataset.sfx, n.dataset.pre, 820));
+  }, 200);
 
   if (p.gems > 0) {
-    screen.appendChild(el('div', {
-      class: 'chip', style: { background: '#F5EDFF', borderColor: '#E4D4FF', color: '#7B3FD1' },
-      html: icon('gem', '', true) + ' +' + p.gems + ' gems'
-    }));
+    const gg = el('div', { class: 'gem-gain' });
+    gg.innerHTML = icon('gem', '', true) + '<b>+0</b><span>gems</span>';
+    screen.appendChild(gg);
+    setTimeout(() => countUp(gg.querySelector('b'), p.gems, '', '+', 900), 420);
   }
-  if (p.rewardNote) screen.appendChild(el('div', { class: 'tiny muted', text: p.rewardNote }));
-  if (p.capped > 0) screen.appendChild(el('div', { class: 'tiny muted', text: 'Daily XP cap reached — ' + p.capped + ' XP was not counted.' }));
+  if (p.capped > 0) screen.appendChild(el('div', { class: 'tiny muted', text: 'Daily cap hit — ' + p.capped + ' XP not counted.' }));
 
   const actions = el('div', { class: 'actions' });
-
-  if (p.reason === 'failed' || (!didPass && p.mode === 'lesson')) {
+  if (p.reason === 'failed' || (p.mode === 'lesson' && !didPass)) {
     actions.appendChild(el('button', {
       class: 'btn btn-primary block', type: 'button',
       text: p.reason === 'failed' ? 'Retry (hearts refilled)' : 'Try again',
@@ -3989,51 +4073,43 @@ function resultsScreen(p) {
         navigate('player', { lessonId: p.lessonId, mode: 'lesson' });
       }
     }));
-    actions.appendChild(el('button', {
-      class: 'btn btn-secondary block', type: 'button', text: 'Practice this lesson',
-      onclick: () => navigate('player', { lessonId: p.lessonId, mode: 'practice' })
-    }));
-  } else if (!didPass && p.mode === 'practice') {
+  } else if (p.mode === 'practice' && !didPass) {
     actions.appendChild(el('button', {
       class: 'btn btn-primary block', type: 'button', text: 'Practice again',
       onclick: () => navigate('player', { lessonId: p.lessonId, mode: 'practice' })
     }));
+  } else if (p.mode === 'lesson' && nextLesson && !isUnlocked(lessonIdx + 1)) {
     actions.appendChild(el('button', {
-      class: 'btn btn-secondary block', type: 'button', text: 'Review the lesson',
-      onclick: () => { const idx = lessonIdx >= 0 ? lessonIdx : 0; setTimeout(() => openLessonSheet(idx), 80); goHome(); }
+      class: 'btn btn-primary block', type: 'button', text: 'Practice to unlock · ' + nextLesson.id,
+      onclick: () => navigate('player', { lessonId: lesson.id, mode: 'practice' })
+    }));
+  } else if (p.mode === 'practice' && nextLesson && isUnlocked(lessonIdx + 1)) {
+    actions.appendChild(el('button', {
+      class: 'btn btn-primary block', type: 'button', text: 'Next lesson · ' + nextLesson.id,
+      onclick: () => openLessonSheet(lessonIdx + 1)
+    }));
+  } else if (p.mode === 'boss' || p.mode === 'flash' || p.mode === 'weak') {
+    actions.appendChild(el('button', {
+      class: 'btn btn-primary block', type: 'button', text: 'Go again',
+      onclick: () => navigate('player', { mode: p.mode })
+    }));
+  } else if (lesson && nextLesson) {
+    actions.appendChild(el('button', {
+      class: 'btn btn-primary block', type: 'button', text: 'Next lesson · ' + nextLesson.id,
+      onclick: () => openLessonSheet(lessonIdx + 1)
     }));
   } else {
-    if (nextLesson && (p.mode === 'lesson' || p.mode === 'practice') && isUnlocked(lessonIdx + 1)) {
-      actions.appendChild(el('button', {
-        class: 'btn btn-primary block', type: 'button', text: 'Next lesson · ' + nextLesson.id,
-        onclick: () => openLessonSheet(lessonIdx + 1)
-      }));
-    } else if (nextLesson && p.mode === 'lesson' && !isUnlocked(lessonIdx + 1)) {
-      actions.appendChild(el('button', {
-        class: 'btn btn-primary block', type: 'button', text: 'Practice to unlock · ' + nextLesson.id,
-        onclick: () => navigate('player', { lessonId: lesson.id, mode: 'practice' })
-      }));
-      actions.appendChild(el('div', {
-        class: 'tiny muted', style: { textAlign: 'center' },
-        text: 'Lesson ' + nextLesson.id + ' opens after a practice pass at ' + pct(CONFIG.practiceGate) + ' accuracy.'
-      }));
-    }
-    if (lesson) {
-      actions.appendChild(el('button', {
-        class: 'btn ' + (nextLesson ? 'btn-secondary' : 'btn-primary') + ' block', type: 'button',
-        text: p.mode === 'practice' ? 'Practice again' : 'Retry for speed',
-        onclick: () => navigate('player', { lessonId: lesson.id, mode: p.mode === 'practice' ? 'practice' : 'lesson' })
-      }));
-    } else if (p.mode === 'boss' || p.mode === 'flash' || p.mode === 'weak') {
-      actions.appendChild(el('button', {
-        class: 'btn btn-primary block', type: 'button', text: 'Go again',
-        onclick: () => navigate('player', { mode: p.mode })
-      }));
-      actions.appendChild(el('button', {
-        class: 'btn btn-secondary block', type: 'button', text: 'Practice hub',
-        onclick: () => navigate('practice')
-      }));
-    }
+    actions.appendChild(el('button', {
+      class: 'btn btn-primary block', type: 'button', text: 'Practice hub',
+      onclick: () => navigate('practice')
+    }));
+  }
+  if (lesson && didPass && !(p.mode === 'lesson' && nextLesson && !isUnlocked(lessonIdx + 1))) {
+    actions.appendChild(el('button', {
+      class: 'btn btn-secondary block', type: 'button',
+      text: p.mode === 'practice' ? 'Practice again' : 'Retry for speed',
+      onclick: () => navigate('player', { lessonId: lesson.id, mode: p.mode === 'practice' ? 'practice' : 'lesson' })
+    }));
   }
   actions.appendChild(el('button', {
     class: 'btn btn-ghost block', type: 'button', text: 'Home',
@@ -4051,7 +4127,7 @@ function resultsScreen(p) {
     setTimeout(() => openModal({
       emoji: icon('party'),
       title: 'Level ' + P.level + '!',
-      body: 'You earned ' + p.xp + ' XP this session. Keep the streak going.',
+      body: 'You reached level ' + P.level + '. ' + Math.max(0, xpForLevel(P.level + 1) - P.xp) + ' XP to level ' + (P.level + 1) + '.',
       actions: [{ label: 'Nice' }]
     }), 700);
   }
@@ -4098,7 +4174,7 @@ function practiceScreen() {
 
   grid.appendChild(card(icon('target'), '#ECFDF5', 'Weak items', 'Spaced repetition on the ones you missed', dueCount() + ' due', () => navigate('player', { mode: 'weak' })));
   grid.appendChild(card(icon('flame', '', true), '#FEF3C7', 'Speed run', '60 seconds, mixed directions, no hints', P.bossBest == null ? '— CPM' : fmtCpm(P.bossBest) + ' CPM', () => navigate('player', { mode: 'boss' })));
-  grid.appendChild(card(icon('bolt', '', true), '#ECFEFF', 'Flash round', '1.5 seconds per item. No chart, no mercy.', P.flashBest == null ? '— CPM' : fmtCpm(P.flashBest) + ' CPM', () => navigate('player', { mode: 'flash' })));
+  grid.appendChild(card(icon('timer'), '#ECFEFF', 'Flash round', '1.5 seconds per item. No chart, no mercy.', P.flashBest == null ? '— CPM' : fmtCpm(P.flashBest) + ' CPM', () => navigate('player', { mode: 'flash' })));
   grid.appendChild(card(icon('ghost'), '#F5F3FF', 'Ghost race', 'Race your own best on any lesson', 'You vs. You', () => openGhostPicker()));
   screen.appendChild(grid);
 
@@ -4190,12 +4266,11 @@ function badgeData() {
   return [
     { emoji: icon('book'), label: 'FIRST', on: anyComplete, title: 'First lesson complete' },
     { emoji: icon('target'), label: 'NIBBLE', on: !!(P.lessons['2.3'] || {}).completed, title: 'Nibble table mastered' },
-    { emoji: icon('bolt', '', true), label: 'GREEDY', on: !!(P.lessons['3.3'] || {}).completed, title: 'Greedy method learned' },
-    { emoji: icon('bolt', '', true), label: '20 CPM', on: (P.pbs.dec2bin || 0) >= 20, title: 'Reach 20 CPM dec→bin' },
+    { emoji: icon('sparkle'), label: 'GREEDY', on: !!(P.lessons['3.3'] || {}).completed, title: 'Greedy method learned' },
+    { emoji: icon('timer'), label: '20 CPM', on: (P.pbs.dec2bin || 0) >= 20, title: 'Reach 20 CPM dec→bin' },
     { emoji: icon('timer'), label: '35 CPM', on: (P.pbs.dec2bin || 0) >= 35, title: 'Reach 35 CPM dec→bin' },
     { emoji: icon('crown', '', true), label: 'CROWN', on: anyCrown, title: 'Earn a legendary crown' },
-    { emoji: icon('flame', '', true), label: 'BOSS', on: (P.bossBest || 0) >= 30, title: 'Score 30+ in a boss run' },
-    { emoji: icon('calendar'), label: '3 DAYS', on: P.streak.count >= 3, title: 'Keep a 3-day streak' }
+    { emoji: icon('flame', '', true), label: 'BOSS', on: (P.bossBest || 0) >= 30, title: 'Score 30+ in a boss run' }
   ];
 }
 
@@ -4233,8 +4308,6 @@ function profileScreen() {
   const acc = totalAttempts ? P.stats.correct / totalAttempts : 0;
   lines.appendChild(line('Total conversions', String(P.stats.conversions || 0)));
   lines.appendChild(line('All-time accuracy', totalAttempts ? pct(acc) : '—'));
-  lines.appendChild(line('Daily streak', null, icon('flame', '', true) + ' ' + P.streak.count + ' days'));
-  lines.appendChild(line('Speed streak', null, icon('bolt', '', true) + ' ' + P.speedStreak.count + ' days'));
   lines.appendChild(line('PB dec→bin', fmtCpm(P.pbs.dec2bin) + ' CPM'));
   lines.appendChild(line('PB bin→dec', fmtCpm(P.pbs.bin2dec) + ' CPM'));
   lines.appendChild(line('Boss best', P.bossBest == null ? '—' : fmtCpm(P.bossBest) + ' CPM'));
@@ -4313,23 +4386,30 @@ function settingsScreen() {
       navigate('settings');
     }
   }));
-  hb.appendChild(el('button', {
-    class: 'btn btn-secondary btn-sm', type: 'button',
-    text: 'Streak freeze · 200 gems',
-    onclick: () => {
-      if (P.gems < 200) { toast('Not enough gems (200 needed)'); return; }
-      P.gems -= 200; P.streak.freeze += 1; save(true);
-      AudioKit.play('streakMilestone'); toast('Streak freeze ready');
-      navigate('settings');
-    }
-  }));
   heartsCard.appendChild(hb);
-  heartsCard.appendChild(el('div', { class: 'tiny muted mt2', html: 'Your gems: ' + icon('gem') + ' ' + P.gems + ' · freezes: ' + P.streak.freeze }));
+  heartsCard.appendChild(el('div', { class: 'tiny muted mt2', text: 'You have ' + P.gems + ' gems.' }));
   screen.appendChild(heartsCard);
+
+  const rewards = el('div', { class: 'card mt4' });
+  rewards.appendChild(el('h3', { style: { fontSize: '15px' }, text: 'Rewards & rules' }));
+  const rules = el('div', { class: 'mt2' });
+  const addRule = (ico, title, text) => {
+    const r = el('div', { class: 'rule-row' });
+    r.innerHTML = icon(ico, '', ico === 'gem' || ico === 'xp') + '<div><b>' + title + '</b><span>' + text + '</span></div>';
+    rules.appendChild(r);
+  };
+  addRule('gem', 'First clear', 'Full lesson XP plus ' + CONFIG.firstClearGems + ' gems, once per lesson.');
+  addRule('timer', 'Replay', Math.round(CONFIG.replayXpFactor * 100) + '% of the base XP and no gems.');
+  addRule('trophy', 'New personal best', '+' + CONFIG.pbGems + ' gems, once a day per lesson.');
+  addRule('target', 'Practice', 'Pays answer XP only and never costs hearts.');
+  addRule('lock', 'Unlock rule', 'Pass the practice session at ' + pct(CONFIG.practiceGate) + ' accuracy to open the next lesson.');
+  addRule('info', 'Daily cap', CONFIG.dailyXpCap + ' XP and ' + CONFIG.dailyGemCap + ' gems from lessons, practice and speed runs.');
+  rewards.appendChild(rules);
+  screen.appendChild(rewards);
 
   const danger = el('div', { class: 'card mt4' });
   danger.appendChild(el('h3', { style: { fontSize: '15px' }, text: 'Danger zone' }));
-  danger.appendChild(el('div', { class: 'tiny muted mt2', text: 'Resetting clears XP, hearts, streaks, stars and every saved stat on this device.' }));
+  danger.appendChild(el('div', { class: 'tiny muted mt2', text: 'Resetting clears XP, hearts, stars and every saved stat on this device.' }));
   danger.appendChild(el('button', {
     class: 'btn btn-danger block mt3', type: 'button', text: 'Reset progress',
     onclick: () => {
@@ -4448,7 +4528,7 @@ document.addEventListener('pointerdown', function () { document.body.classList.r
 
 const TAB_ICONS = {
   learn: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.8 12 3.5l9 7.3V20a1 1 0 0 1-1 1h-5v-6.5H9V21H4a1 1 0 0 1-1-1z"/></svg>',
-  practice: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2.5 4.5 13.5H11l-1 8L19.5 10H13z"/></svg>',
+  practice: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4.2v4.2h-4.2"/></svg>',
   stats: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11"/><path d="M10 20V4"/><path d="M16 20v-6"/><path d="M2.5 20h19"/></svg>',
   settings: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/><circle cx="9" cy="7" r="2.6" style="fill:#fff"/><circle cx="15" cy="12" r="2.6" style="fill:#fff"/><circle cx="8" cy="17" r="2.6" style="fill:#fff"/></svg>'
 };
