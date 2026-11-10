@@ -68,14 +68,11 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
 .ico{width:1em;height:1em;display:inline-block;vertical-align:-.14em;fill:none;stroke:currentColor;
   stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto;overflow:visible}
 .ico-fill{fill:currentColor;stroke:none}
-.hud-item .ico{width:22px;height:22px}
-.hud-item.hearts .ico{width:18px;height:18px}
 .btn .ico{width:17px;height:17px}
 .keypad .ico{width:22px;height:22px}
 .pill .ico{width:13px;height:13px}
 .feedback .icon .ico{width:20px;height:20px;stroke-width:3}
 .modal .emoji .ico{width:32px;height:32px}
-.badge .ico{width:24px;height:24px}
 .takeaway .ico{width:15px;height:15px;vertical-align:-2px}
 .stat-line .ico{width:14px;height:14px}
 .result-stars .ico{width:36px;height:36px}
@@ -128,39 +125,58 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
 }
 .icon-btn:hover{background:var(--color-polar);color:var(--color-graphite)}
 .icon-btn:active{transform:scale(.92)}
+.icon-btn .ico{width:20px;height:20px;stroke-width:2.6}
+.back-btn{
+  width:40px;height:40px;display:grid;place-items:center;border-radius:14px;flex:0 0 auto;
+  border:2px solid var(--color-swan);background:var(--color-paper);color:var(--color-graphite);
+  box-shadow:0 3px 0 var(--color-swan);cursor:pointer;
+  transition:transform .12s cubic-bezier(0.34,1.56,0.64,1),box-shadow .12s,background .15s;
+}
+.back-btn:hover{background:var(--color-polar)}
+.back-btn:active{transform:translateY(3px);box-shadow:none}
+.back-btn .ico{width:20px;height:20px;stroke-width:2.6}
 
-/* ---------- HUD (compact: XP · gems · hearts) ---------- */
+/* ---------- HUD (sticky: XP · gems · hearts) ---------- */
 .hud{
-  display:flex;align-items:stretch;gap:2px;padding:5px;background:var(--color-paper);
-  border-radius:var(--radius-lg);border:2px solid var(--color-swan);box-shadow:0 2px 0 var(--color-swan);
-  margin-bottom:18px;
+  position:sticky;top:0;z-index:40;display:flex;align-items:stretch;gap:8px;
+  margin:-16px -16px 20px;padding:12px 16px;
+  background:var(--color-paper);border-bottom:2px solid var(--color-swan);
+  box-shadow:0 8px 18px rgba(60,60,60,.06);
 }
 .hud-stat{
-  display:flex;align-items:center;gap:6px;border:0;background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;border:0;background:var(--color-polar);cursor:pointer;
   font-family:inherit;font-weight:700;font-size:17px;color:var(--color-graphite);
-  font-variant-numeric:tabular-nums;padding:8px 10px;border-radius:12px;min-width:0;
+  font-variant-numeric:tabular-nums;padding:8px 12px;border-radius:14px;min-width:0;
   transition:background .15s ease,transform .1s ease;
 }
-.hud-stat:active{transform:scale(.96)}
-.hud-stat:hover{background:var(--color-polar)}
-.hud-stat.xp{flex:1;background:var(--color-eel-light);color:var(--color-ecto-green-dark);padding-left:5px}
+.hud-stat:active{transform:scale(.97)}
+.hud-stat:hover{background:var(--color-swan)}
+.hud-stat .hud-ico{width:18px;height:18px;flex:0 0 auto}
+.hud-stat .hud-ico .ico{width:100%;height:100%}
+.hud-stat.xp{
+  flex:1;display:grid;grid-template-columns:auto auto 1fr;grid-template-rows:auto auto;
+  align-items:center;column-gap:7px;row-gap:6px;padding:7px 11px 8px 9px;
+  background:var(--color-eel-light);color:var(--color-ecto-green-dark);
+}
 .hud-stat.xp:hover{background:var(--color-lingot-lime)}
-.hud-stat .hud-ico{width:17px;height:17px;flex:0 0 auto}
+.hud-stat.xp .hud-ico{width:19px;height:19px;color:var(--color-bee-dark)}
+.hud-xp{display:flex;align-items:baseline;gap:4px;min-width:0;line-height:1}
 .hud-lv{
-  display:grid;place-items:center;width:24px;height:24px;border-radius:50%;flex:0 0 auto;
+  display:grid;place-items:center;width:26px;height:26px;border-radius:50%;flex:0 0 auto;
   background:var(--color-ecto-green);color:var(--color-paper);font-size:11px;
   box-shadow:0 2px 0 var(--color-ecto-green-dark);
 }
 .hud-stat .hud-num{font-size:19px;letter-spacing:-.02em;line-height:1}
-.hud-stat .hud-cap{font-size:10px;letter-spacing:.9px;font-weight:700;opacity:.55;margin-left:-2px}
-.hud-stat.xp .ico-fill{color:var(--color-bee-dark)}
+.hud-stat .hud-cap{font-size:10px;letter-spacing:.9px;font-weight:700;opacity:.6;font-style:normal}
+.hud-bar{grid-column:1/-1;height:6px;border-radius:999px;background:rgba(88,204,2,.16);overflow:hidden}
+.hud-bar i{display:block;height:100%;border-radius:999px;background:var(--color-ecto-green);transition:width .5s var(--spring)}
 .hud-stat.gem{color:var(--color-beetle)}
 .hud-stat.heart{color:var(--color-cardinal)}
-.hud-stat.heart.low{animation:heartWarn 1.8s ease-in-out infinite}
+.hud-stat.heart.low{background:#ffe9e9;animation:heartWarn 1.6s ease-in-out infinite}
 .hud-stat.bump{animation:hudXp .5s var(--spring)}
-@keyframes hudXp{0%{transform:none}40%{transform:scale(1.04)}100%{transform:none}}
+@keyframes hudXp{0%{transform:none}40%{transform:scale(1.03)}100%{transform:none}}
 
-/* ---------- cards (kit) ---------- */
+
 .card{
   background:var(--color-paper);border:2px solid var(--color-swan);border-radius:var(--radius-lg);
   padding:24px;box-shadow:0 2px 0 var(--color-swan);
@@ -185,14 +201,14 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
 .unit-group{margin-bottom:8px}
 .section-block{position:relative}
 .section-banner{
-  position:sticky;top:8px;z-index:20;
+  position:sticky;top:80px;z-index:20;
   margin:24px 0 10px;padding:18px 20px;border-radius:var(--radius-lg);color:var(--color-paper);
   background:var(--color-ecto-green);box-shadow:0 4px 0 var(--color-ecto-green-dark),0 10px 24px rgba(0,0,0,.10);
   border:2px solid var(--color-ecto-green-dark);
   transition:box-shadow .2s ease,transform .2s ease;
 }
 .section-banner.stuck{box-shadow:0 4px 0 var(--color-ecto-green-dark),0 14px 28px rgba(0,0,0,.16)}
-.section-banner::before{content:'';position:absolute;left:0;right:0;top:-12px;height:12px;background:var(--color-paper)}
+.section-banner::before{content:'';position:absolute;left:0;right:0;top:-14px;height:14px;background:var(--color-paper)}
 .section-banner .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;opacity:.92}
 .section-banner h2{font-size:22px;color:var(--color-paper);margin-top:2px;letter-spacing:-0.03em}
 .section-banner p{font-size:13px;font-weight:500;opacity:.94;margin-top:2px;line-height:1.4}
@@ -286,6 +302,7 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
 /* ---------- theory ---------- */
 .theory{padding-top:8px}
 .theory-top{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.theory-top .icon-btn{color:var(--color-graphite)}
 .dots{display:flex;gap:6px;margin-left:auto}
 .dots i{width:8px;height:8px;border-radius:50%;background:var(--color-swan);transition:all .2s ease}
 .dots i.on{background:var(--color-ecto-green);transform:scale(1.2)}
@@ -369,7 +386,7 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
   padding:5px 10px;background:none;font-family:inherit;cursor:pointer;font-variant-numeric:tabular-nums}
 .player-hearts .ico{width:17px;height:17px}
 .player-hearts:active{transform:scale(.94)}
-.player-hearts.low{animation:heartWarn 1.8s ease-in-out infinite}
+.player-hearts.low{background:#ffe9e9;border-color:#ffd1d1;animation:heartWarn 1.8s ease-in-out infinite}
 .player-hearts .em{color:var(--color-ash)}
 .player-hearts .em{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--color-ash);display:inline-flex;align-items:center;gap:4px}
 .player-sub{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 4px;min-height:28px}
@@ -587,10 +604,11 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
 @keyframes gemWiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg) scale(1.06)}75%{transform:rotate(10deg) scale(1.06)}}
 
 /* ---------- page head ---------- */
-.page-head{display:flex;align-items:flex-start;align-self:stretch;gap:4px;margin:2px 0 18px}
-.page-head .icon-btn{margin-top:2px;flex:0 0 auto}
-.page-head h1{font-size:28px;line-height:1.14}
-.page-head .tiny{font-size:14px;font-weight:500;line-height:1.4;color:var(--color-ash)}
+.page-head{display:flex;align-items:flex-start;align-self:stretch;gap:12px;margin:2px 0 20px}
+.page-head .back-btn{margin-top:1px}
+.page-head-text{min-width:0;padding-top:2px}
+.page-head h1{font-size:28px;line-height:1.15;letter-spacing:-.03em}
+.page-head .tiny{font-size:14px;font-weight:500;line-height:1.45;color:var(--color-ash);margin-top:3px}
 
 /* ---------- practice ---------- */
 .settings-actions{display:flex;flex-direction:column;gap:10px;margin-top:16px}
@@ -612,24 +630,22 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
   border:2px solid var(--color-swan);border-radius:var(--pill);padding:5px 10px}
 
 /* ---------- profile ---------- */
-.profile-head{display:flex;align-items:center;gap:18px;margin-bottom:8px}
-.avatar{width:76px;height:76px;border-radius:50%;background:var(--color-eel-light);display:grid;place-items:center;
-  border:2px solid var(--color-lingot-lime);flex:0 0 auto;color:var(--color-ecto-green-dark)}
-.xpbar{height:16px;border-radius:var(--pill);background:var(--color-swan);overflow:hidden;margin-top:10px}
+.profile-head{display:flex;align-items:center;gap:16px;margin-bottom:8px}
+.avatar{width:74px;height:74px;border-radius:50%;background:var(--color-eel-light);display:grid;place-items:center;
+  border:2px solid var(--color-lingot-lime);flex:0 0 auto;color:var(--color-ecto-green-dark);overflow:hidden}
+.avatar .mascot{width:54px;height:54px;animation:floatBot 3.6s ease-in-out infinite}
+.xpbar{height:12px;border-radius:var(--pill);background:var(--color-swan);overflow:hidden;margin-top:8px}
 .xpbar i{display:block;height:100%;background:var(--color-ecto-green);border-radius:var(--pill);transition:width .6s var(--spring)}
 .stat-line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;
   border-bottom:2px solid #f0f0f0;font-size:16px;font-weight:500;color:var(--color-ash)}
 .stat-line:last-child{border-bottom:0}
 .stat-line b{font-variant-numeric:tabular-nums;color:var(--color-graphite);font-weight:700;display:inline-flex;align-items:center;gap:6px}
-.chart-wrap{position:relative;height:160px;margin-top:16px}
+.chart-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.chart-head .chip{text-transform:none;letter-spacing:.2px;font-size:11px}
+.chart-head .chip .ico{width:13px;height:13px;color:var(--color-bee-dark)}
+.chart-wrap{position:relative;height:168px;margin-top:14px}
 .chart-wrap canvas{width:100%;height:100%;display:block}
 .chart-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-mute);font-size:13px;text-align:center;font-weight:500}
-.badges{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
-.badge{aspect-ratio:1;border-radius:var(--radius-md);background:var(--color-polar);border:2px dashed var(--color-swan);
-  display:grid;place-items:center;color:var(--color-ash);position:relative;padding-bottom:12px}
-.badge.on{background:#fffbeb;border:2px solid var(--color-bee);color:var(--color-bee-dark);box-shadow:0 4px 0 rgba(255,200,0,.35)}
-.badge small{position:absolute;bottom:5px;font-size:8px;font-weight:700;letter-spacing:.3px;color:inherit}
-
 /* ---------- settings ---------- */
 .setting-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;border-bottom:2px solid #f0f0f0}
 .setting-row:last-child{border-bottom:0}
@@ -685,6 +701,7 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
   position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--color-paper);
   border-top:2px solid var(--color-swan);display:flex;align-items:stretch;justify-content:space-around;
   gap:2px;padding:8px 6px calc(8px + env(safe-area-inset-bottom));max-width:720px;margin:0 auto;
+  box-shadow:0 -6px 18px rgba(60,60,60,.07);
 }
 .tab{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;
@@ -696,6 +713,52 @@ a{color:var(--color-macaw-blue);text-decoration:none;font-weight:600}
 .tab.active{color:var(--color-macaw-blue)}
 .tab.active svg{stroke:var(--color-macaw-blue)}
 .tab:active{transform:scale(.96)}
+
+/* ---------- onboarding + fields ---------- */
+.onboard{display:flex;flex-direction:column;justify-content:center;min-height:100dvh;padding:16px 0}
+.onboard-card{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:28px 22px}
+.onboard-card .mascot{width:104px;height:104px;margin:0 auto 10px}
+.onboard-card h1{font-size:27px;line-height:1.15}
+.onboard-card p{color:var(--color-ash);font-size:15px;font-weight:500;line-height:1.5;margin-top:6px;max-width:320px}
+.onboard-form{width:100%;display:flex;flex-direction:column;gap:14px;margin-top:22px;text-align:left}
+.field{display:flex;flex-direction:column;gap:6px;width:100%}
+.field .f-label{font-size:11px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--color-ash)}
+.field input{
+  width:100%;font:inherit;font-weight:600;font-size:16px;color:var(--color-graphite);
+  padding:14px 16px;border-radius:var(--radius-md);border:2px solid var(--color-swan);
+  background:var(--color-paper);box-shadow:0 2px 0 var(--color-swan);
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+.field input::placeholder{color:#b9b9b9;font-weight:500}
+.field input:focus{outline:none;border-color:var(--color-ecto-green);box-shadow:0 2px 0 var(--color-ecto-green-dark)}
+.field .f-hint{font-size:12px;color:var(--color-ash);font-weight:500;line-height:1.4}
+.field-error{font-size:13px;font-weight:600;color:var(--color-cardinal)}
+.field-error:empty{display:none}
+.settings-form{display:flex;flex-direction:column;gap:12px}
+
+/* ---------- gem shop ---------- */
+.shop{text-align:left}
+.shop h2{text-align:center}
+.shop-balance{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px 0 16px;
+  font-weight:700;color:var(--color-beetle);font-size:16px}
+.shop-balance .ico{width:18px;height:18px}
+.shop-list{display:flex;flex-direction:column;gap:10px}
+.shop-item{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:var(--radius-md);
+  border:2px solid var(--color-swan);background:var(--color-paper);box-shadow:0 3px 0 var(--color-swan);
+  cursor:pointer;text-align:left;font-family:inherit;transition:transform .1s ease,box-shadow .1s ease}
+.shop-item:active{transform:translateY(3px);box-shadow:none}
+.shop-item.off{opacity:.5;cursor:not-allowed;box-shadow:none}
+.shop-ico{width:38px;height:38px;border-radius:50%;background:#ffecec;color:var(--color-cardinal);
+  display:grid;place-items:center;flex:0 0 auto}
+.shop-ico .ico{width:18px;height:18px}
+.shop-txt{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.shop-txt b{font-size:15px;color:var(--color-graphite)}
+.shop-txt i{font-style:normal;font-size:12.5px;color:var(--color-ash);font-weight:500;line-height:1.35}
+.shop-price{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--color-beetle);
+  font-size:14px;flex:0 0 auto;font-variant-numeric:tabular-nums}
+.shop-price .ico{width:15px;height:15px}
+.shop-note{font-size:12px;color:var(--color-ash);font-weight:500;line-height:1.45;margin-top:14px}
+.shop .actions{margin-top:14px}
 
 /* ---------- misc ---------- */
 .muted{color:var(--color-ash)}
@@ -841,11 +904,14 @@ body.kbd :focus-visible{box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(28,176,246,.45)
   .hero{padding:18px;gap:14px}
   .hero .mascot{flex-basis:64px;width:64px;height:64px}
   .hero h1{font-size:20px}
-  .hud{padding:4px;gap:2px}
-  .hud-stat{font-size:16px;padding:7px 9px}
+  .hud{padding:10px 16px;gap:6px;margin:-14px -16px 18px}
+  .hud-stat{font-size:15px;padding:7px 10px}
+  .hud-stat.xp{padding:7px 10px 8px 8px}
   .hud-stat .hud-num{font-size:18px}
-  .hud-stat .hud-ico{width:16px;height:16px}
-  .hud-lv{width:22px;height:22px;font-size:10px}
+  .hud-stat .hud-ico{width:17px;height:17px}
+  .hud-stat.xp .hud-ico{width:18px;height:18px}
+  .hud-lv{width:24px;height:24px;font-size:10px}
+  .section-banner{top:80px}
   .fab{right:16px;bottom:calc(84px + env(safe-area-inset-bottom))}
   .section-banner{padding:16px}
   .section-banner h2{font-size:20px}
@@ -853,7 +919,6 @@ body.kbd :focus-visible{box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(28,176,246,.45)
   .stat-card .v{font-size:25px}
   .practice-card{padding:14px}
   .practice-card .pc-icon{width:50px;height:50px}
-  .badges{gap:8px}
   .player{padding:10px 16px 14px}
   .player-top{padding:10px 12px;gap:10px;margin-bottom:12px}
   .player-foot .check-hint{display:none}
@@ -866,10 +931,11 @@ body.kbd :focus-visible{box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(28,176,246,.45)
   .place{font-size:9px}
   .num-digit{min-width:38px;height:54px;font-size:28px}
   .num-ghost{min-width:38px;height:54px}
-  .hud{gap:1px;padding:4px}
-  .hud-stat{font-size:15px;padding:7px 8px}
+  .hud{gap:5px;padding:9px 12px}
+  .hud-stat{font-size:14.5px;padding:7px 8px}
   .hud-stat .hud-cap{display:none}
-  .hud-lv{width:20px;height:20px;font-size:9.5px}
+  .hud-stat .hud-num{font-size:17px}
+  .hud-lv{width:22px;height:22px;font-size:9.5px}
   .mcq-opt{font-size:16px;padding:14px 12px}
   .tab{font-size:9px;letter-spacing:.4px}
   .tab svg{width:23px;height:23px}
@@ -932,8 +998,9 @@ function daysBetween(a, b) {
   const p = s => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d); };
   return Math.round((p(b) - p(a)) / 86400000);
 }
-function levelFor(xp) { return Math.floor(Math.sqrt(Math.max(0, xp) / 25)) + 1; }
-function xpForLevel(lv) { return Math.pow(lv - 1, 2) * 25; }
+/* flat 100 XP per level keeps the bar readable */
+function levelFor(xp) { return Math.floor(Math.max(0, xp) / 100) + 1; }
+function xpForLevel(lv) { return (Math.max(1, lv) - 1) * 100; }
 function fmtCpm(v) { return v == null ? '—' : (Math.round(v * 10) / 10).toFixed(1); }
 function pct(v) { return (Math.round((v || 0) * 1000) / 10).toFixed(1) + '%'; }
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -1064,6 +1131,7 @@ function defaultState() {
   return {
     xp: 0, level: 1, gems: 0, hearts: CONFIG.heartsMax, heartsRefilledAt: Date.now(),
     resume: null,
+    profile: { name: '', age: null, onboarded: false },
     lessons: {},
     srs: {},
     pbs: { dec2bin: null, bin2dec: null },
@@ -1085,6 +1153,7 @@ function loadState() {
     const saved = JSON.parse(raw);
     const merged = Object.assign({}, base, saved);
     merged.resume = saved.resume && saved.resume.id ? saved.resume : null;
+    merged.profile = Object.assign({}, base.profile, saved.profile || {});
     merged.settings = Object.assign({}, base.settings, saved.settings || {});
     merged.pbs = Object.assign({}, base.pbs, saved.pbs || {});
     merged.stats = Object.assign({}, base.stats, saved.stats || {});
@@ -1217,7 +1286,8 @@ function awardXp(amount) {
 function xpProgress() {
   const lv = levelFor(P.xp);
   const lo = xpForLevel(lv), hi = xpForLevel(lv + 1);
-  return { lv, lo, hi, ratio: clamp((P.xp - lo) / (hi - lo), 0, 1) };
+  const into = Math.max(0, P.xp - lo), need = Math.max(1, hi - lo);
+  return { lv, lo, hi, into, need, ratio: clamp(into / need, 0, 1) };
 }
 function recordHistory(entry) {
   P.history.push(Object.assign({ day: dayKey() }, entry));
@@ -2028,32 +2098,21 @@ const UNIT_TITLES = {
 
 function mascotSVG(cls) {
   return '<svg class="mascot ' + (cls || '') + '" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">' +
-    '<ellipse cx="60" cy="112" rx="33" ry="6.5" fill="#eef3e6"/>' +
-    '<path d="M60 31V18" stroke="#3c3c3c" stroke-width="4.5" stroke-linecap="round"/>' +
-    '<circle cx="60" cy="12.5" r="7.5" fill="#58cc02" stroke="#3c3c3c" stroke-width="3"/>' +
-    '<circle cx="57.4" cy="10" r="2.1" fill="#ffffff" opacity=".85"/>' +
-    '<rect x="13" y="69" width="15" height="27" rx="7.5" fill="#58cc02" stroke="#3c3c3c" stroke-width="3.5"/>' +
-    '<rect x="92" y="69" width="15" height="27" rx="7.5" fill="#58cc02" stroke="#3c3c3c" stroke-width="3.5"/>' +
-    '<rect x="11" y="88" width="19" height="15" rx="7.5" fill="#ffffff" stroke="#3c3c3c" stroke-width="3.5"/>' +
-    '<rect x="90" y="88" width="19" height="15" rx="7.5" fill="#ffffff" stroke="#3c3c3c" stroke-width="3.5"/>' +
-    '<rect x="38" y="101" width="17" height="10" rx="5" fill="#1cb0f6" stroke="#3c3c3c" stroke-width="3.2"/>' +
-    '<rect x="65" y="101" width="17" height="10" rx="5" fill="#1cb0f6" stroke="#3c3c3c" stroke-width="3.2"/>' +
-    '<rect x="29" y="69" width="62" height="37" rx="15" fill="#a5ed6e" stroke="#3c3c3c" stroke-width="4"/>' +
-    '<rect x="45" y="80" width="30" height="15" rx="7.5" fill="#ffffff" stroke="#3c3c3c" stroke-width="3"/>' +
-    '<circle cx="53" cy="87.5" r="2.6" fill="#58cc02"/><circle cx="60" cy="87.5" r="2.6" fill="#58cc02"/><circle cx="67" cy="87.5" r="2.6" fill="#58cc02"/>' +
-    '<rect x="13.5" y="43" width="9" height="20" rx="4.5" fill="#1cb0f6" stroke="#3c3c3c" stroke-width="3"/>' +
-    '<rect x="97.5" y="43" width="9" height="20" rx="4.5" fill="#1cb0f6" stroke="#3c3c3c" stroke-width="3"/>' +
-    '<rect x="21" y="28" width="78" height="48" rx="18" fill="#ffffff" stroke="#3c3c3c" stroke-width="4"/>' +
-    '<path d="M33 33.5c6-4 14-5.5 22-5.5" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity=".9"/>' +
-    '<rect x="31" y="37" width="58" height="31" rx="13" fill="#3c3c3c"/>' +
-    '<circle cx="47.5" cy="51.5" r="8.4" fill="#a5ed6e"/><circle cx="72.5" cy="51.5" r="8.4" fill="#a5ed6e"/>' +
-    '<circle cx="47.5" cy="52" r="4.1" fill="#2f4a12"/><circle cx="72.5" cy="52" r="4.1" fill="#2f4a12"/>' +
-    '<circle cx="45" cy="49.2" r="2.3" fill="#ffffff"/><circle cx="70" cy="49.2" r="2.3" fill="#ffffff"/>' +
-    '<circle cx="33.5" cy="61" r="3.6" fill="#ffd0d0"/><circle cx="86.5" cy="61" r="3.6" fill="#ffd0d0"/>' +
-    '<path d="M52 61.5c3.4 3.8 13.2 3.8 16 0" stroke="#a5ed6e" stroke-width="3.2" stroke-linecap="round" fill="none"/>' +
+    '<ellipse cx="60" cy="107" rx="23" ry="4.6" fill="#eef3e6"/>' +
+    '<path d="M60 30V16" stroke="#3c3c3c" stroke-width="4.5" stroke-linecap="round"/>' +
+    '<circle cx="60" cy="11" r="7" fill="#58cc02" stroke="#3c3c3c" stroke-width="3"/>' +
+    '<circle cx="57.4" cy="8.6" r="2" fill="#ffffff" opacity=".85"/>' +
+    '<rect x="12" y="47" width="16" height="28" rx="8" fill="#58cc02" stroke="#3c3c3c" stroke-width="3.5"/>' +
+    '<rect x="92" y="47" width="16" height="28" rx="8" fill="#58cc02" stroke="#3c3c3c" stroke-width="3.5"/>' +
+    '<circle cx="60" cy="60" r="37" fill="#ffffff" stroke="#3c3c3c" stroke-width="4.5"/>' +
+    '<path d="M33 41c5.5-6.5 13.5-10.5 22-11.5" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" opacity=".95"/>' +
+    '<rect x="35" y="46" width="50" height="30" rx="15" fill="#3c3c3c"/>' +
+    '<circle cx="51" cy="61" r="7.6" fill="#a5ed6e"/><circle cx="69" cy="61" r="7.6" fill="#a5ed6e"/>' +
+    '<circle cx="51" cy="61.5" r="3.8" fill="#2f4a12"/><circle cx="69" cy="61.5" r="3.8" fill="#2f4a12"/>' +
+    '<circle cx="48.8" cy="58.8" r="2.1" fill="#ffffff"/><circle cx="66.8" cy="58.8" r="2.1" fill="#ffffff"/>' +
+    '<path d="M54 68.8c3 3.2 9 3.2 12 0" stroke="#a5ed6e" stroke-width="3.2" stroke-linecap="round"/>' +
     '</svg>';
 }
-
 
 /* ---- inline SVG icons (no emoji dependency) ---- */
 const ICONS = {
@@ -2062,7 +2121,7 @@ const ICONS = {
   heart: '<path d="M12 20.4S3.6 15 3.6 9.3A4.6 4.6 0 0 1 12 6.2a4.6 4.6 0 0 1 8.4 3.1c0 5.7-8.4 11.1-8.4 11.1z"/>',
   lock: '<rect x="4.6" y="10.4" width="14.8" height="10" rx="2.6"/><path d="M8 10.4V7.6a4 4 0 0 1 8 0v2.8"/>',
   star: '<path d="M11.56 4.07Q12.00 3.00 12.44 4.07L14.00 7.87Q14.44 8.94 15.59 9.03L19.69 9.34Q20.84 9.43 19.96 10.17L16.83 12.83Q15.95 13.58 16.22 14.71L17.19 18.70Q17.47 19.82 16.48 19.22L12.98 17.06Q12.00 16.45 11.02 17.06L7.52 19.22Q6.53 19.82 6.81 18.70L7.78 14.71Q8.05 13.58 7.17 12.83L4.04 10.17Q3.16 9.43 4.31 9.34L8.41 9.03Q9.56 8.94 10.00 7.87Z"/>',
-  xp: '<path d="M12 2.4c.9 5.1 3.6 7.8 8.7 8.7-5.1.9-7.8 3.6-8.7 8.7-.9-5.1-3.6-7.8-8.7-8.7 5.1-.9 7.8-3.6 8.7-8.7z"/>',
+  xp: '<path d="M12 2c.5 5.2 4.8 9.5 10 10-5.2.5-9.5 4.8-10 10-.5-5.2-4.8-9.5-10-10 5.2-.5 9.5-4.8 10-10z"/>',
   play: '<path d="M8 5.4v13.2L19 12z"/>',
   crown: '<path d="M3 8.6 7.5 12 12 5.2 16.5 12 21 8.6 19 19H5z"/>',
   target: '<circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="4.4"/><circle cx="12" cy="12" r="1"/>',
@@ -2229,14 +2288,14 @@ function openHeartsModal() {
   root.innerHTML = '';
   const backdrop = el('div', { class: 'modal-backdrop' });
   const box = el('div', { class: 'modal hearts-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Hearts and refill timer' });
-  box.appendChild(el('h2', { text: 'Hearts' }));
+  box.appendChild(el('h2', { text: P.hearts === 0 ? 'Out of hearts' : 'Hearts' }));
   const tanks = el('div', { class: 'heart-tanks' });
   box.appendChild(tanks);
   const timer = el('div', { class: 'heart-timer-big' });
-  const timerLabel = el('div', { class: 'heart-timer-label', text: 'until your next heart' });
+  const timerLabel = el('div', { class: 'heart-timer-label' });
   box.appendChild(timer);
   box.appendChild(timerLabel);
-  const note = el('p', { class: 'always', text: 'One heart every ' + CONFIG.heartsRefillMinutes + ' minutes. Practice sessions never cost hearts. You have ' + P.gems + ' gems.' });
+  const note = el('p', { class: 'always' });
   box.appendChild(note);
 
   const step = CONFIG.heartsRefillMinutes * 60000;
@@ -2267,52 +2326,128 @@ function openHeartsModal() {
       timerLabel.textContent = 'all hearts ready';
     } else {
       timer.textContent = fmtCountdown(remain);
-      timerLabel.textContent = 'until your next heart';
+      timerLabel.textContent = P.hearts === 0 ? 'until your next heart' : 'until your next heart';
+    }
+    note.textContent = P.hearts === 0
+      ? 'You have ' + P.gems + ' gems. Refill now, or wait for the timer.'
+      : 'One heart every ' + CONFIG.heartsRefillMinutes + ' minutes. You have ' + P.gems + ' gems.';
+    if (refillBtn) {
+      const full = P.hearts >= CONFIG.heartsMax;
+      const can = !full && P.gems >= 50;
+      refillBtn.disabled = !can;
+      refillBtn.setAttribute('aria-disabled', can ? 'false' : 'true');
+      refillBtn.textContent = full ? 'Hearts are full' : 'Refill · 50 gems';
     }
   }
-  paintTanks();
-
   const actions = el('div', { class: 'actions' });
-  actions.appendChild(el('button', {
-    class: 'btn ' + (P.gems >= 50 ? 'btn-primary' : 'btn-secondary'), type: 'button',
-    text: 'Refill · 50 gems',
+  const refillBtn = el('button', {
+    class: 'btn btn-primary block', type: 'button', text: 'Refill · 50 gems',
     onclick: () => {
-      if (!refillHeartsWithGems()) { toast('Not enough gems — practice is always free'); return; }
+      if (!refillHeartsWithGems()) { toast('Not enough gems — earn more with first clears'); openShop(); return; }
       AudioKit.play('levelUp');
       toast('Hearts refilled');
-      close();
-      if (currentScreenName === 'home' || currentScreenName === 'practice' || currentScreenName === 'profile') renderScreen(currentScreenName, {}, 'none');
+      refreshHud();
+      paintTanks();
     }
-  }));
+  });
+  actions.appendChild(refillBtn);
   actions.appendChild(el('button', {
-    class: 'btn btn-secondary', type: 'button', text: 'Practice without hearts',
-    onclick: () => { close(); if (currentScreenName !== 'practice') navigate('practice'); }
+    class: 'btn btn-secondary block', type: 'button', text: 'Get gems',
+    onclick: () => openShop()
   }));
-  actions.appendChild(el('button', { class: 'btn btn-ghost', type: 'button', text: 'Close', onclick: () => close() }));
+  actions.appendChild(el('button', { class: 'btn btn-ghost block', type: 'button', text: 'Close', onclick: () => close() }));
   box.appendChild(actions);
+  paintTanks();
+
   backdrop.appendChild(box);
   root.appendChild(backdrop);
 
   const tick = setInterval(() => {
     if (!document.body.contains(box)) { clearInterval(tick); return; }
-    refillHearts();
+    if (refillHearts()) refreshHud();
     paintTanks();
-    if (P.hearts >= CONFIG.heartsMax) setTimeout(() => close(), 900);
   }, 1000);
 
   function close() {
     clearInterval(tick);
     root.innerHTML = '';
     document.removeEventListener('keydown', onKey);
+    refreshHud();
   }
   function onKey(e) { if (e.key === 'Escape') { e.preventDefault(); close(); } }
   document.addEventListener('keydown', onKey);
   backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
-  const first = box.querySelector('.btn');
-  if (first) first.focus();
 }
 
-/* confetti */
+/* ---------- gem shop + hud refresh ---------- */
+function refreshHud() {
+  refillHearts();
+  const wrap = document.querySelector('.hud');
+  if (!wrap) return;
+  const xp = xpProgress();
+  const lv = wrap.querySelector('.hud-lv'); if (lv) lv.textContent = String(P.level);
+  const num = wrap.querySelector('[data-hud-xp]'); if (num) num.textContent = String(P.xp);
+  const fill = wrap.querySelector('.hud-bar i'); if (fill) fill.style.width = Math.round(xp.ratio * 100) + '%';
+  const gems = wrap.querySelector('[data-hud-gems]'); if (gems) gems.textContent = String(P.gems);
+  const hearts = wrap.querySelector('[data-hud-hearts]'); if (hearts) hearts.textContent = String(P.hearts);
+  const hb = wrap.querySelector('.hud-stat.heart'); if (hb) hb.classList.toggle('low', P.hearts === 0);
+}
+
+function buyWithGems(price, hearts, label) {
+  if (P.gems < price) { toast('Not enough gems'); return false; }
+  if (P.hearts >= CONFIG.heartsMax) { toast('Hearts are already full'); return false; }
+  P.gems -= price;
+  P.hearts = Math.min(CONFIG.heartsMax, P.hearts + hearts);
+  if (P.hearts >= CONFIG.heartsMax || P.hearts === CONFIG.heartsMax - 1) P.heartsRefilledAt = Date.now();
+  save(true);
+  AudioKit.play('levelUp');
+  refreshHud();
+  toast(label);
+  return true;
+}
+
+function openShop() {
+  refillHearts();
+  AudioKit.play('buttonPress');
+  const root = document.getElementById('modal-root');
+  root.innerHTML = '';
+  const backdrop = el('div', { class: 'modal-backdrop' });
+  const box = el('div', { class: 'modal shop', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Gem shop' });
+  box.appendChild(el('h2', { text: 'Gem shop' }));
+  const bal = el('div', { class: 'shop-balance' });
+  bal.innerHTML = icon('gem', '', true) + ' <b>' + P.gems + '</b> gems';
+  box.appendChild(bal);
+  const list = el('div', { class: 'shop-list' });
+  const full = P.hearts >= CONFIG.heartsMax;
+  const shopItem = (title, desc, price, disabled, onBuy) => {
+    const b = el('button', { class: 'shop-item' + (disabled ? ' off' : ''), type: 'button' });
+    b.innerHTML = '<span class="shop-ico">' + icon('heart') + '</span>' +
+      '<span class="shop-txt"><b>' + title + '</b><i>' + desc + '</i></span>' +
+      '<span class="shop-price">' + icon('gem', '', true) + price + '</span>';
+    b.disabled = !!disabled;
+    if (!disabled) b.addEventListener('click', onBuy);
+    return b;
+  };
+  list.appendChild(shopItem('Refill all hearts', 'Back to ' + CONFIG.heartsMax + ' hearts right now', 50,
+    full || P.gems < 50,
+    () => { if (buyWithGems(50, CONFIG.heartsMax, 'Hearts refilled')) openShop(); }));
+  list.appendChild(shopItem('One heart', 'Skip the wait for a single heart', 20,
+    full || P.gems < 20,
+    () => { if (buyWithGems(20, 1, 'One heart added')) openShop(); }));
+  box.appendChild(list);
+  box.appendChild(el('p', { class: 'shop-note', text: 'Gems come from first clears and new personal bests. Hearts refill on their own every ' + CONFIG.heartsRefillMinutes + ' minutes.' }));
+  const actions = el('div', { class: 'actions' });
+  actions.appendChild(el('button', { class: 'btn btn-secondary block', type: 'button', text: 'Close', onclick: () => close() }));
+  box.appendChild(actions);
+  backdrop.appendChild(box);
+  root.appendChild(backdrop);
+  function close() { root.innerHTML = ''; document.removeEventListener('keydown', onKey); refreshHud(); }
+  function onKey(e) { if (e.key === 'Escape') { e.preventDefault(); close(); } }
+  document.addEventListener('keydown', onKey);
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
+}
+
+
 let confettiRaf = null;
 function confettiBurst(count) {
   const canvas = document.getElementById('confetti');
@@ -2430,35 +2565,38 @@ function stopAllTimers() {
   if (typeof Player !== 'undefined' && Player) Player.stop();
 }
 function hudBar() {
+  const xp = xpProgress();
   const wrap = el('div', { class: 'hud' });
   const xpBtn = el('button', {
     class: 'hud-stat xp', type: 'button',
-    'aria-label': 'Level ' + P.level + ', ' + P.xp + ' XP. Open stats',
+    'aria-label': 'Level ' + P.level + ', ' + P.xp + ' XP. ' + xp.into + ' of ' + xp.need + ' XP to level ' + (P.level + 1) + '. Open stats',
     onclick: () => navigate('profile')
   });
   xpBtn.innerHTML =
     '<span class="hud-lv">' + P.level + '</span>' +
     '<span class="hud-ico">' + icon('xp', '', true) + '</span>' +
-    '<b class="hud-num" data-hud-xp>' + P.xp + '</b><span class="hud-cap">XP</span>';
+    '<span class="hud-xp"><b class="hud-num" data-hud-xp>' + P.xp + '</b><i class="hud-cap">XP</i></span>' +
+    '<span class="hud-bar" aria-hidden="true"><i style="width:' + Math.round(xp.ratio * 100) + '%"></i></span>';
   wrap.appendChild(xpBtn);
 
   const gemBtn = el('button', {
     class: 'hud-stat gem', type: 'button',
-    'aria-label': P.gems + ' gems',
-    onclick: () => toast('You have ' + P.gems + ' gems')
+    'aria-label': P.gems + ' gems. Open the gem shop',
+    onclick: () => openShop()
   });
-  gemBtn.innerHTML = '<span class="hud-ico">' + icon('gem', '', true) + '</span><b>' + P.gems + '</b>';
+  gemBtn.innerHTML = '<span class="hud-ico">' + icon('gem', '', true) + '</span><b data-hud-gems>' + P.gems + '</b>';
   wrap.appendChild(gemBtn);
 
   const heartBtn = el('button', {
-    class: 'hud-stat heart' + (P.hearts <= 2 ? ' low' : ''), type: 'button',
-    'aria-label': P.hearts + ' of ' + CONFIG.heartsMax + ' hearts. Open timer',
+    class: 'hud-stat heart' + (P.hearts === 0 ? ' low' : ''), type: 'button',
+    'aria-label': P.hearts + ' of ' + CONFIG.heartsMax + ' hearts. ' + (P.hearts === 0 ? 'Out of hearts — open the refill timer' : 'Open refill timer'),
     onclick: () => openHeartsModal()
   });
-  heartBtn.innerHTML = '<span class="hud-ico">' + icon('heart', '', P.hearts > 0) + '</span><b>' + P.hearts + '</b>';
+  heartBtn.innerHTML = '<span class="hud-ico">' + icon('heart', '', P.hearts > 0) + '</span><b data-hud-hearts>' + P.hearts + '</b>';
   wrap.appendChild(heartBtn);
   return wrap;
 }
+
 function starMarkup(stars, crown) {
   let s = '';
   for (let i = 0; i < 3; i++) s += '<span class="' + (i < stars ? '' : 'off') + '">' + icon('star', '', true) + '</span>';
@@ -2484,8 +2622,9 @@ function homeScreen() {
   hero.innerHTML = mascotSVG('');
   const heroText = el('div', { class: 'grow' });
   const greet = el('div');
+  const greetName = P.profile && P.profile.name ? String(P.profile.name).trim() : '';
   greet.innerHTML =
-    '<h1>' + (P.xp === 0 ? 'Ready to think in 1s and 0s?' : 'Welcome back!') + '</h1>' +
+    '<h1>' + (greetName ? 'Hi, ' + esc(greetName) + '!' : (P.xp === 0 ? 'Ready to think in 1s and 0s?' : 'Welcome back!')) + '</h1>' +
     '<p>' + (allDone
       ? 'Every lesson is complete. Chase a crown on the speed runs.'
       : needsPractice
@@ -2581,14 +2720,13 @@ function homeScreen() {
 
   if (!bootScrolled) {
     bootScrolled = true;
-    setTimeout(() => {
-      const node = document.querySelector('.node-wrap[data-lesson="' + resume.lesson.id + '"]');
-      if (!node) return;
-      const rt = node.getBoundingClientRect().top;
-      if (rt > window.innerHeight * 0.8) {
-        window.scrollTo({ top: rt + window.scrollY - 168, behavior: reducedMotion() ? 'auto' : 'smooth' });
-      }
-    }, 460);
+    if (P.resume || P.xp > 0) {
+      setTimeout(() => {
+        const node = document.querySelector('.node-wrap[data-lesson="' + resume.lesson.id + '"]');
+        if (!node) return;
+        window.scrollTo({ top: node.getBoundingClientRect().top + window.scrollY - 132, behavior: reducedMotion() ? 'auto' : 'smooth' });
+      }, 460);
+    }
   }
   requestAnimationFrame(() => requestAnimationFrame(() => drawPathLines(screen)));
   return screen;
@@ -2674,7 +2812,7 @@ function openLessonSheet(index) {
 
   const head = el('div', { class: 'sheet-head' });
   head.innerHTML = '<div><div class="tiny muted">Lesson ' + lesson.id + (done(st) ? ' · completed' : '') + '</div><h2>' + esc(lesson.title) + '</h2><div class="sub">' + esc(lesson.subtitle) + '</div></div>';
-  head.appendChild(el('button', { class: 'icon-btn', 'aria-label': 'Close', text: '✕', onclick: close }));
+  head.appendChild(el('button', { class: 'icon-btn', 'aria-label': 'Close', html: icon('cross'), onclick: close }));
   sheet.appendChild(head);
   sheet.appendChild(el('p', { class: 'muted tiny', text: lesson.newConcept }));
 
@@ -3333,13 +3471,13 @@ const Player = {
     root.classList.add('theory');
     const top = el('div', { class: 'theory-top' });
     top.appendChild(el('button', {
-      class: 'icon-btn', 'aria-label': 'Back', text: '←',
+      class: 'icon-btn', 'aria-label': 'Back', html: icon('arrowLeft'),
       onclick: () => { if (index > 0) this.showTheory(index - 1); else this.confirmQuit(); }
     }));
     const dots = el('div', { class: 'dots', 'aria-label': 'Screen ' + (index + 1) + ' of ' + lesson.theory.length });
     lesson.theory.forEach((_, i) => dots.appendChild(el('i', { class: i === index ? 'on' : '' })));
     top.appendChild(dots);
-    top.appendChild(el('button', { class: 'icon-btn', 'aria-label': 'Quit lesson', text: '✕', onclick: () => this.confirmQuit() }));
+    top.appendChild(el('button', { class: 'icon-btn', 'aria-label': 'Quit lesson', html: icon('cross'), onclick: () => this.confirmQuit() }));
     root.appendChild(top);
 
     const card = el('div', { class: 'theory-card' });
@@ -3374,7 +3512,7 @@ const Player = {
     root.classList.add('player');
 
     const top = el('div', { class: 'player-top' });
-    this.refs.quit = el('button', { class: 'icon-btn', 'aria-label': 'Quit session', text: '✕', onclick: () => this.confirmQuit() });
+    this.refs.quit = el('button', { class: 'icon-btn', 'aria-label': 'Quit session', html: icon('cross'), onclick: () => this.confirmQuit() });
     top.appendChild(this.refs.quit);
     this.refs.pbarWrap = el('div', { class: 'pbar-wrap' });
     this.refs.pbar = el('div', { class: 'pbar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': '0', 'aria-label': 'Progress' });
@@ -3422,20 +3560,12 @@ const Player = {
   },
 
   paintHearts() {
-    if (!this.refs.hearts) return;
-    const s = this.s;
-    if (s.mode !== 'lesson') {
-      const label = s.isBoss ? 'Boss' : s.mode === 'flash' ? 'Flash' : s.mode === 'ghost' ? 'Ghost' : 'Practice';
-      const modeIcon = s.isBoss ? icon('flame', '', true) : s.mode === 'flash' ? icon('timer') : icon('target');
-      this.refs.hearts.innerHTML = '<span class="em">' + modeIcon + ' ' + label + '</span>';
-      this.refs.hearts.classList.remove('low');
-      this.refs.hearts.style.pointerEvents = 'none';
-      return;
-    }
-    this.refs.hearts.style.pointerEvents = '';
-    this.refs.hearts.innerHTML = icon('heart', '', P.hearts > 0) + '<b>' + P.hearts + '</b>';
-    this.refs.hearts.classList.toggle('low', P.hearts <= 2);
-    this.refs.hearts.setAttribute('aria-label', P.hearts + ' of ' + CONFIG.heartsMax + ' hearts. Open refill timer');
+    const elH = this.refs.hearts;
+    if (!elH) return;
+    const out = P.hearts <= 0;
+    elH.className = 'chip hearts player-hearts' + (out ? ' low' : '');
+    elH.innerHTML = icon('heart', '', !out) + '<b>' + P.hearts + '</b>';
+    elH.setAttribute('aria-label', P.hearts + ' of ' + CONFIG.heartsMax + ' hearts. ' + (out ? 'Out of hearts — open the refill timer' : 'Open refill timer'));
   },
 
   paintCombo() {
@@ -3976,12 +4106,13 @@ function mascotBlock(cls) {
   return d;
 }
 
-function statCard(value, label, variant, delay, countTo, suffix, prefix) {
+function statCard(value, label, variant, delay, countTo, suffix, prefix, dec) {
   const v = el('div', { class: 'v', text: value });
   if (countTo != null) {
     v.dataset.to = String(countTo);
     v.dataset.sfx = suffix || '';
     v.dataset.pre = prefix || '';
+    v.dataset.dec = String(dec || 0);
   }
   const c = el('div', { class: 'stat-card ' + (variant || '') }, [
     v,
@@ -3990,19 +4121,20 @@ function statCard(value, label, variant, delay, countTo, suffix, prefix) {
   c.style.animationDelay = (delay || 0) + 'ms';
   return c;
 }
-
-function countUp(node, to, suffix, prefix, ms) {
+function countUp(node, to, suffix, prefix, ms, dec) {
   if (!node) return;
-  const target = Math.max(0, Math.round(to));
   const sfx = suffix || '';
   const pre = prefix || '';
-  if (reducedMotion()) { node.textContent = pre + target + sfx; return; }
+  const d = dec || 0;
+  const target = Math.max(0, to);
+  const fmt = v => d > 0 ? v.toFixed(d) : String(Math.round(v));
+  if (reducedMotion()) { node.textContent = pre + fmt(target) + sfx; return; }
   const start = performance.now();
   const dur = ms || 760;
   function step(now) {
     const t = clamp((now - start) / dur, 0, 1);
     const eased = 1 - Math.pow(1 - t, 3);
-    node.textContent = pre + Math.round(target * eased) + sfx;
+    node.textContent = pre + fmt(target * eased) + sfx;
     if (t < 1 && node.isConnected) requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
@@ -4046,13 +4178,13 @@ function resultsScreen(p) {
   }
 
   const grid = el('div', { class: 'stat-grid' });
-  grid.appendChild(statCard('0%', 'Accuracy', p.accuracy >= 0.9 ? 'green' : 'amber', 0, Math.round(p.accuracy * 100), '%'));
+  grid.appendChild(statCard('0%', 'Accuracy', p.accuracy >= 0.9 ? 'green' : 'amber', 0, p.accuracy * 100, '%', '', 1));
   grid.appendChild(statCard(p.cpm == null ? '—' : fmtCpm(p.cpm), 'CPM', 'purple', 60));
   grid.appendChild(statCard('+0', 'XP earned', 'green', 120, p.xp, '', '+'));
   grid.appendChild(statCard(p.mode === 'boss' ? String(p.bossCount || 0) : String(p.maxCombo || 0), p.mode === 'boss' ? 'Correct' : 'Best combo', '', 180));
   screen.appendChild(grid);
   setTimeout(() => {
-    grid.querySelectorAll('.v[data-to]').forEach(n => countUp(n, Number(n.dataset.to), n.dataset.sfx, n.dataset.pre, 820));
+    grid.querySelectorAll('.v[data-to]').forEach(n => countUp(n, Number(n.dataset.to), n.dataset.sfx, n.dataset.pre, 820, Number(n.dataset.dec)));
   }, 200);
 
   if (p.gems > 0) {
@@ -4137,12 +4269,23 @@ function resultsScreen(p) {
 /* ===== SCREENS: PRACTICE HUB ===== */
 function pageHead(title, subtitle) {
   const head = el('div', { class: 'page-head' });
-  head.appendChild(el('button', { class: 'icon-btn', 'aria-label': 'Back to path', text: '←', onclick: () => goHome() }));
-  const t = el('div');
+  head.appendChild(el('button', {
+    class: 'back-btn', type: 'button', 'aria-label': 'Back to path',
+    html: icon('arrowLeft'), onclick: () => goHome()
+  }));
+  const t = el('div', { class: 'page-head-text' });
   t.appendChild(el('h1', { text: title }));
   if (subtitle) t.appendChild(el('div', { class: 'tiny muted', text: subtitle }));
   head.appendChild(t);
   return head;
+}
+
+function fieldWrap(label, input, hint) {
+  const w = el('label', { class: 'field' });
+  w.appendChild(el('span', { class: 'f-label', text: label }));
+  w.appendChild(input);
+  if (hint) w.appendChild(el('span', { class: 'f-hint', text: hint }));
+  return w;
 }
 
 function dueCount() {
@@ -4231,70 +4374,73 @@ function drawCpmChart(canvas) {
     pts.push({ k, v: map[k] == null ? null : map[k] });
   }
   const vals = pts.map(p => p.v).filter(v => v != null);
+  const baseY = h - 22, topY = 16;
+  ctx.strokeStyle = '#e5e5e5';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, baseY); ctx.lineTo(w, baseY); ctx.stroke();
   if (!vals.length) return;
-  const max = Math.max.apply(null, vals) * 1.15;
-  const pad = 6;
-  const bw = (w - pad * 2) / pts.length;
-  pts.forEach((p, i) => {
-    if (p.v == null) return;
-    const bh = Math.max(3, (p.v / max) * (h - 18));
-    const x = pad + i * bw + bw * 0.18;
-    const y = h - 10 - bh;
-    const g = ctx.createLinearGradient(0, y, 0, h);
-    g.addColorStop(0, '#06B6D4'); g.addColorStop(1, '#22C55E');
-    ctx.fillStyle = g;
+  const max = Math.max.apply(null, vals);
+  const scaleMax = Math.max(10, max * 1.18);
+  const slot = w / pts.length;
+  const bw = Math.max(4, Math.min(13, slot * 0.56));
+  const family = getComputedStyle(document.body).fontFamily;
+  pts.forEach((pt, i) => {
+    if (pt.v == null) return;
+    const bh = Math.max(6, (pt.v / scaleMax) * (baseY - topY));
+    const x = i * slot + (slot - bw) / 2;
+    const y = baseY - bh;
+    const r = Math.min(5, bw / 2);
+    ctx.fillStyle = '#58cc02';
     ctx.beginPath();
-    const r = Math.min(3, bw / 2);
-    ctx.moveTo(x, y + bh);
+    ctx.moveTo(x, baseY);
     ctx.lineTo(x, y + r);
     ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.lineTo(x + bw * 0.64 - r, y);
-    ctx.quadraticCurveTo(x + bw * 0.64, y, x + bw * 0.64, y + r);
-    ctx.lineTo(x + bw * 0.64, y + bh);
+    ctx.lineTo(x + bw - r, y);
+    ctx.quadraticCurveTo(x + bw, y, x + bw, y + r);
+    ctx.lineTo(x + bw, baseY);
     ctx.closePath();
     ctx.fill();
+    if (i === pts.length - 1) {
+      ctx.fillStyle = '#3c3c3c';
+      ctx.font = '700 10px ' + family;
+      ctx.textAlign = 'right';
+      ctx.fillText(String(Math.round(pt.v)), x + bw, Math.max(10, y - 6));
+    }
   });
-  ctx.fillStyle = '#9AA6B6';
-  ctx.font = '10px -apple-system, Segoe UI, Roboto, sans-serif';
-  ctx.fillText('30 days ago', pad, h - 1);
-  ctx.fillText('today', w - 34, h - 1);
-}
-
-function badgeData() {
-  const anyComplete = Object.keys(P.lessons).some(id => P.lessons[id].completed);
-  const anyCrown = Object.keys(P.lessons).some(id => P.lessons[id].crown);
-  return [
-    { emoji: icon('book'), label: 'FIRST', on: anyComplete, title: 'First lesson complete' },
-    { emoji: icon('target'), label: 'NIBBLE', on: !!(P.lessons['2.3'] || {}).completed, title: 'Nibble table mastered' },
-    { emoji: icon('sparkle'), label: 'GREEDY', on: !!(P.lessons['3.3'] || {}).completed, title: 'Greedy method learned' },
-    { emoji: icon('timer'), label: '20 CPM', on: (P.pbs.dec2bin || 0) >= 20, title: 'Reach 20 CPM dec→bin' },
-    { emoji: icon('timer'), label: '35 CPM', on: (P.pbs.dec2bin || 0) >= 35, title: 'Reach 35 CPM dec→bin' },
-    { emoji: icon('crown', '', true), label: 'CROWN', on: anyCrown, title: 'Earn a legendary crown' },
-    { emoji: icon('flame', '', true), label: 'BOSS', on: (P.bossBest || 0) >= 30, title: 'Score 30+ in a boss run' }
-  ];
+  ctx.font = '600 10px ' + family;
+  ctx.fillStyle = '#afafaf';
+  ctx.textAlign = 'left';
+  ctx.fillText('30 days ago', 0, h - 4);
+  ctx.textAlign = 'right';
+  ctx.fillText('today', w, h - 4);
 }
 
 function profileScreen() {
   refillHearts();
   const screen = el('div', { class: 'profile' });
   screen.appendChild(hudBar());
-  screen.appendChild(pageHead('Profile', 'Your numbers. No leaderboard, no noise.'));
+  screen.appendChild(pageHead('Stats', 'Your numbers. No leaderboard, no noise.'));
 
   const xp = xpProgress();
+  const prof = P.profile || {};
+  const name = (prof.name || '').trim();
   const head = el('div', { class: 'card' });
-  head.appendChild(el('div', { class: 'profile-head' }, [
-    el('div', { class: 'avatar', html: icon('brain', '', true) }),
-    (() => {
-      const d = el('div', { class: 'grow' });
-      d.appendChild(el('h2', { text: 'Level ' + P.level }));
-      d.appendChild(el('div', { class: 'tiny muted', text: P.xp + ' XP · ' + (xp.hi - P.xp) + ' XP to level ' + (P.level + 1) }));
-      const bar = el('div', { class: 'xpbar', role: 'progressbar', 'aria-valuenow': String(Math.round(xp.ratio * 100)), 'aria-valuemin': '0', 'aria-valuemax': '100' });
-      const fill = el('i'); fill.style.width = Math.round(xp.ratio * 100) + '%';
-      bar.appendChild(fill);
-      d.appendChild(bar);
-      return d;
-    })()
-  ]));
+  const avatar = el('div', { class: 'avatar', html: mascotSVG('') });
+  const idBlock = el('div', { class: 'grow' });
+  idBlock.appendChild(el('h2', { text: name || 'Level ' + P.level }));
+  const metaBits = [];
+  if (prof.age) metaBits.push('Age ' + prof.age);
+  metaBits.push('Level ' + P.level);
+  metaBits.push(xp.into + ' / ' + xp.need + ' XP');
+  idBlock.appendChild(el('div', { class: 'tiny muted', text: metaBits.join(' · ') }));
+  const bar = el('div', { class: 'xpbar', role: 'progressbar', 'aria-valuenow': String(Math.round(xp.ratio * 100)), 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-label': 'Progress to level ' + (P.level + 1) });
+  const fill = el('i');
+  fill.style.width = Math.round(xp.ratio * 100) + '%';
+  bar.appendChild(fill);
+  idBlock.appendChild(bar);
+  idBlock.appendChild(el('div', { class: 'tiny muted', text: (xp.need - xp.into) + ' XP to level ' + (P.level + 1) }));
+  head.appendChild(el('div', { class: 'profile-head' }, [avatar, idBlock]));
+
   const lines = el('div', { class: 'mt3' });
   const line = (k, v, html) => {
     const l = el('div', { class: 'stat-line' });
@@ -4306,8 +4452,12 @@ function profileScreen() {
   };
   const totalAttempts = P.stats.attempts || 0;
   const acc = totalAttempts ? P.stats.correct / totalAttempts : 0;
+  const daySet = new Set(P.history.map(e => e.day));
+  lines.appendChild(line('Days practised', String(daySet.size)));
   lines.appendChild(line('Total conversions', String(P.stats.conversions || 0)));
   lines.appendChild(line('All-time accuracy', totalAttempts ? pct(acc) : '—'));
+  const cleared = Object.keys(P.lessons).filter(id => P.lessons[id].completed).length;
+  lines.appendChild(line('Lessons cleared', cleared + ' / ' + LESSONS.length));
   lines.appendChild(line('PB dec→bin', fmtCpm(P.pbs.dec2bin) + ' CPM'));
   lines.appendChild(line('PB bin→dec', fmtCpm(P.pbs.bin2dec) + ' CPM'));
   lines.appendChild(line('Boss best', P.bossBest == null ? '—' : fmtCpm(P.bossBest) + ' CPM'));
@@ -4315,8 +4465,14 @@ function profileScreen() {
   head.appendChild(lines);
   screen.appendChild(head);
 
+  const bestCpm = P.history.reduce((m, e) => (e.cpm != null && e.cpm > m ? e.cpm : m), 0);
   const chartCard = el('div', { class: 'card mt4' });
-  chartCard.appendChild(el('h3', { style: { fontSize: '15px' }, text: 'CPM · last 30 days' }));
+  const chartHead = el('div', { class: 'chart-head' });
+  chartHead.appendChild(el('h3', { style: { fontSize: '15px' }, text: 'CPM · last 30 days' }));
+  const chip = el('span', { class: 'chip' });
+  chip.innerHTML = icon('trophy') + (bestCpm ? ' best ' + fmtCpm(bestCpm) : ' no runs yet');
+  chartHead.appendChild(chip);
+  chartCard.appendChild(chartHead);
   const chartWrap = el('div', { class: 'chart-wrap' });
   const canvas = el('canvas', { 'aria-label': 'Chart of your best CPM per day over the last 30 days' });
   chartWrap.appendChild(canvas);
@@ -4324,21 +4480,10 @@ function profileScreen() {
   if (!P.history.length) chartWrap.appendChild(el('div', { class: 'chart-empty', text: 'Finish a session to start the chart.' }));
   screen.appendChild(chartCard);
   setTimeout(() => drawCpmChart(canvas), 30);
-
-  const badgeCard = el('div', { class: 'card mt4' });
-  badgeCard.appendChild(el('h3', { style: { fontSize: '15px' }, text: 'Badges' }));
-  const badges = el('div', { class: 'badges' });
-  badgeData().forEach(b => {
-    const d = el('div', { class: 'badge ' + (b.on ? 'on' : ''), title: b.title, 'aria-label': (b.on ? 'Earned: ' : 'Locked: ') + b.title });
-    d.innerHTML = b.emoji + '<small>' + b.label + '</small>';
-    badges.appendChild(d);
-  });
-  badgeCard.appendChild(badges);
-  screen.appendChild(badgeCard);
   return screen;
 }
 
-/* ===== SCREENS: SETTINGS ===== */
+
 function settingsScreen() {
   const screen = el('div', { class: 'settings' });
   screen.appendChild(pageHead('Settings', 'Make it feel right.'));
@@ -4373,22 +4518,34 @@ function settingsScreen() {
   }));
   screen.appendChild(card);
 
-  const heartsCard = el('div', { class: 'card mt4' });
-  heartsCard.appendChild(el('h3', { style: { fontSize: '15px' }, text: 'Hearts & gems' }));
-  heartsCard.appendChild(el('div', { class: 'tiny muted mt2', text: P.hearts >= CONFIG.heartsMax ? 'Hearts are full.' : 'Next heart in ' + fmtCountdown(nextHeartIn()) + ' · 1 heart every ' + CONFIG.heartsRefillMinutes + ' min.' }));
-  const hb = el('div', { class: 'settings-actions' });
-  hb.appendChild(el('button', {
-    class: 'btn btn-secondary btn-sm', type: 'button',
-    text: 'Refill hearts · 50 gems',
-    onclick: () => {
-      if (!refillHeartsWithGems()) { toast('Not enough gems'); return; }
-      AudioKit.play('levelUp'); toast('Hearts refilled');
-      navigate('settings');
+  const profCard = el('div', { class: 'card mt4' });
+  profCard.appendChild(el('h3', { style: { fontSize: '15px' }, text: 'Your profile' }));
+  profCard.appendChild(el('div', { class: 'tiny muted mt2', text: 'Used to greet you and to label your stats. Stays on this device.' }));
+  const profForm = el('form', { class: 'settings-form mt3' });
+  const nameInput = el('input', { type: 'text', maxlength: '24', value: (P.profile && P.profile.name) || '', placeholder: 'Your name', 'aria-label': 'Your name' });
+  const ageInput = el('input', { type: 'number', min: '4', max: '120', inputmode: 'numeric', value: P.profile && P.profile.age != null ? String(P.profile.age) : '', placeholder: 'Optional', 'aria-label': 'Your age' });
+  profForm.appendChild(fieldWrap('Name', nameInput));
+  profForm.appendChild(fieldWrap('Age', ageInput, 'Optional. Only shown on your stats card.'));
+  const profErr = el('div', { class: 'field-error', role: 'alert' });
+  profForm.appendChild(profErr);
+  profForm.appendChild(el('button', { class: 'btn btn-secondary block', type: 'submit', text: 'Save profile' }));
+  profForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const nm = nameInput.value.trim().replace(/s+/g, ' ');
+    const ageRaw = ageInput.value.trim();
+    if (ageRaw) {
+      const age = Number(ageRaw);
+      if (!Number.isFinite(age) || age < 4 || age > 120) { profErr.textContent = 'Age should be between 4 and 120.'; ageInput.focus(); return; }
+      P.profile.age = Math.round(age);
+    } else {
+      P.profile.age = null;
     }
-  }));
-  heartsCard.appendChild(hb);
-  heartsCard.appendChild(el('div', { class: 'tiny muted mt2', text: 'You have ' + P.gems + ' gems.' }));
-  screen.appendChild(heartsCard);
+    P.profile.name = nm;
+    save(true);
+    toast('Profile saved');
+  });
+  profCard.appendChild(profForm);
+  screen.appendChild(profCard);
 
   const rewards = el('div', { class: 'card mt4' });
   rewards.appendChild(el('h3', { style: { fontSize: '15px' }, text: 'Rewards & rules' }));
@@ -4422,7 +4579,9 @@ function settingsScreen() {
           {
             label: 'Reset', variant: 'danger', onClick: () => {
               try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+              const keepProfile = P.profile;
               P = defaultState();
+              P.profile = keepProfile;
               save(true);
               document.body.classList.toggle('reduce-motion', !!P.settings.reducedMotion);
               toast('Progress reset');
@@ -4506,9 +4665,58 @@ function aboutScreen() {
   return screen;
 }
 
+/* ===== SCREENS: ONBOARDING ===== */
+function finishOnboarding(skipped) {
+  P.profile.onboarded = true;
+  save(true);
+  AudioKit.play('buttonPress');
+  renderScreen('home', {}, 'none');
+  if (!skipped && P.profile.name) setTimeout(() => toast('Nice to meet you, ' + P.profile.name), 300);
+}
+
+function onboardingScreen() {
+  const screen = el('div', { class: 'onboard' });
+  const card = el('div', { class: 'card onboard-card' });
+  card.innerHTML = mascotSVG('') +
+    '<h1>Hi, I\'m Byte.</h1>' +
+    '<p>Two quick things so I can greet you properly. Everything stays on this device.</p>';
+  const form = el('form', { class: 'onboard-form', novalidate: 'novalidate' });
+  const nameInput = el('input', { type: 'text', maxlength: '24', placeholder: 'Your name', autocomplete: 'given-name' });
+  const ageInput = el('input', { type: 'number', min: '4', max: '120', inputmode: 'numeric', placeholder: 'Optional' });
+  form.appendChild(fieldWrap('Your name', nameInput));
+  form.appendChild(fieldWrap('Your age', ageInput, 'Optional. Only shown on your stats card.'));
+  const err = el('div', { class: 'field-error', role: 'alert' });
+  form.appendChild(err);
+  form.appendChild(el('button', { class: 'btn btn-primary block', type: 'submit', text: 'Start learning' }));
+  form.appendChild(el('button', {
+    class: 'btn btn-ghost block', type: 'button', text: 'Skip for now',
+    onclick: () => finishOnboarding(true)
+  }));
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const nm = nameInput.value.trim().replace(/s+/g, ' ');
+    const ageRaw = ageInput.value.trim();
+    if (!nm) { err.textContent = 'Add a name, or skip for now.'; nameInput.focus(); return; }
+    if (ageRaw) {
+      const age = Number(ageRaw);
+      if (!Number.isFinite(age) || age < 4 || age > 120) { err.textContent = 'Age should be between 4 and 120.'; ageInput.focus(); return; }
+      P.profile.age = Math.round(age);
+    } else {
+      P.profile.age = null;
+    }
+    P.profile.name = nm;
+    finishOnboarding(false);
+  });
+  card.appendChild(form);
+  screen.appendChild(card);
+  setTimeout(() => { try { nameInput.focus(); } catch (e) {} }, 280);
+  return screen;
+}
+
 /* ===== APP INIT ===== */
 const SCREENS = {
   home: homeScreen,
+  onboarding: onboardingScreen,
   player: function (params) { const root = el('div'); Player.begin(params, root); return root; },
   results: resultsScreen,
   practice: practiceScreen,
@@ -4551,18 +4759,16 @@ function init() {
   applyMotionSetting();
   refillHearts();
   buildTabbar();
-  renderScreen('home', {}, 'none');
+  renderScreen(P.profile && P.profile.onboarded ? 'home' : 'onboarding', {}, 'none');
   let pathTimer = null;
   window.addEventListener('resize', () => { clearTimeout(pathTimer); pathTimer = setTimeout(() => drawPathLines(), 160); });
   setInterval(() => {
-    if (refillHearts() && currentScreenName !== 'player' && currentScreenName !== 'results') {
-      renderScreen(currentScreenName, {}, 'none');
-      return;
-    }
+    if (refillHearts()) refreshHud();
     const left = nextHeartIn();
     document.querySelectorAll('[data-heart-timer]').forEach(n => { n.textContent = fmtCountdown(left); });
   }, 1000);
 }
+
 
 init();
 
