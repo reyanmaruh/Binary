@@ -37,6 +37,9 @@ npx eas build --platform android
 - Modes: lesson, practice, weak items (spaced repetition), 60 s speed run, flash round.
 - Screens: onboarding, path home with sticky HUD, player, results, practice hub,
   stats (chart + records) and settings (name, age, reduced motion, reset).
+- Visual parity: the web palette, Space Grotesk (via `@expo-google-fonts`), 3D
+  shelf buttons, and the CSS motion ported to the Animated API (screen entrances,
+  bit flips, keypad pops, sheet/feedback springs, star and gem pops, mascot float).
 - Persistence through AsyncStorage — the whole store is one JSON blob under
   `binary-trainer/v1`.
 
@@ -48,7 +51,9 @@ src/store.tsx           state, persistence, hearts timer, rewards
 src/data/curriculum.ts  generated from index.html (do not hand-edit)
 src/screens/            Onboarding, Home, Player, Results, Practice, Stats, Settings
 src/components/         Byte, HUD, Modals, Question, UI primitives
-src/theme.ts            palette, radii, type scale (matches the web design)
+src/theme.ts            palette, fonts, radii, type scale (matches the web design)
+src/motion.tsx          Press3D/Tap, FadeIn, pulse/mount/bump hooks
+src/components/Text.tsx maps fontWeight onto Space Grotesk faces
 ```
 
 ## Differences from the web version

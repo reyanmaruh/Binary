@@ -1,9 +1,11 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Easing, ScrollView, StyleSheet, View } from 'react-native';
 import { Byte } from '../components/Byte';
 import { HUD } from '../components/HUD';
+import { Text } from '../components/Text';
 import { Card, PageHead, ProgressBar } from '../components/UI';
 import { LESSONS } from '../data/curriculum';
+import { FadeIn } from '../motion';
 import type { Nav } from '../navigation';
 import { useStore } from '../store';
 import { C, R, T } from '../theme';
@@ -16,6 +18,7 @@ export function StatsScreen({ nav }: { nav: Nav }) {
   const totalAttempts = state.stats.attempts;
   const accuracy = totalAttempts ? state.stats.correct / totalAttempts : 0;
   const cleared = Object.keys(state.lessons).filter((id) => state.lessons[id]?.completed).length;
+  const reduced = state.settings.reducedMotion;
 
   const days = Array.from({ length: 30 }).map((_, i) => {
     const d = new Date();
@@ -39,71 +42,100 @@ export function StatsScreen({ nav }: { nav: Nav }) {
   ];
 
   return (
-    <ScrollView style={{ flex: 1 }} stickyHeaderIndices={[0]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: C.paper }}
+      stickyHeaderIndices={[0]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       <HUD onStats={() => {}} />
-      <PageHead title="Stats" subtitle="Your numbers. No leaderboard, no noise." onBack={() => nav.tab('home')} />
+      <View style={styles.inner}>
+        <PageHead title="Stats" subtitle="Your numbers. No leaderboard, no noise." onBack={() => nav.tab('home')} />
 
-      <Card>
-        <View style={styles.head}>
-          <View style={styles.avatar}>
-            <Byte size={54} float={false} reduced={state.settings.reducedMotion} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={T.h2}>{name || `Level ${xp.lv}`}</Text>
-            <Text style={styles.meta}>
-              {state.profile.age ? `Age ${state.profile.age} · ` : ''}Level {xp.lv} · {xp.into} / {xp.need} XP
-            </Text>
+        <FadeIn from={10} enabled={!reduced}>
+          <Card style={{ padding: 20 }}>
+            <View style={styles.head}>
+              <View style={styles.avatar}>
+                <Byte size={54} float={false} reduced={reduced} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={T.h2}>{name || `Level ${xp.lv}`}</Text>
+                <Text style={styles.meta}>
+                  {state.profile.age ? `Age ${state.profile.age} · ` : ''}Level {xp.lv} · {xp.into} / {xp.need} XP
+                </Text>
+                <View style={{ marginTop: 8 }}>
+                  <ProgressBar ratio={xp.ratio} height={12} />
+                </View>
+                <Text style={[T.tiny, { marginTop: 6 }]}>
+                  {xp.need - xp.into} XP to level {xp.lv + 1}
+                </Text>
+              </View>
+            </View>
             <View style={{ marginTop: 8 }}>
-              <ProgressBar ratio={xp.ratio} height={12} />
+              {lines.map(([k, v], i) => (
+                <View key={k} style={[styles.line, i === lines.length - 1 ? { borderBottomWidth: 0 } : null]}>
+                  <Text style={styles.lineKey}>{k}</Text>
+                  <Text style={styles.lineValue}>{v}</Text>
+                </View>
+              ))}
             </View>
-            <Text style={[T.tiny, { marginTop: 6 }]}>{xp.need - xp.into} XP to level {xp.lv + 1}</Text>
-          </View>
-        </View>
-        <View style={{ marginTop: 10 }}>
-          {lines.map(([k, v], i) => (
-            <View key={k} style={[styles.line, i === lines.length - 1 ? { borderBottomWidth: 0 } : null]}>
-              <Text style={styles.lineKey}>{k}</Text>
-              <Text style={styles.lineValue}>{v}</Text>
-            </View>
-          ))}
-        </View>
-      </Card>
+          </Card>
+        </FadeIn>
 
-      <Card style={{ marginTop: 16 }}>
-        <View style={styles.chartHead}>
-          <Text style={T.h3}>CPM · last 30 days</Text>
-          <View style={styles.trophy}>
-            <Text style={styles.trophyText}>🏆 best {fmtCpm(maxCpm === 10 ? null : maxCpm)}</Text>
-          </View>
-        </View>
-        <View style={styles.chart}>
-          {days.map((d) => (
-            <View key={d.key} style={styles.barWrap}>
-              <View
-                style={[
-                  styles.bar,
-                  { height: Math.max(3, (d.cpm / maxCpm) * 100), backgroundColor: d.cpm > 0 ? C.green : C.polar },
-                ]}
-              />
+        <FadeIn delay={90} from={14} enabled={!reduced} style={{ marginTop: 16 }}>
+          <Card style={{ padding: 20 }}>
+            <View style={styles.chartHead}>
+              <Text style={T.h3}>CPM · last 30 days</Text>
+              <View style={styles.trophy}>
+                <Text style={styles.trophyText}>best {fmtCpm(maxCpm === 10 ? null : maxCpm)}</Text>
+              </View>
             </View>
-          ))}
-        </View>
-        <View style={styles.chartLabels}>
-          <Text style={T.tiny}>30 days ago</Text>
-          <Text style={T.tiny}>today</Text>
-        </View>
-      </Card>
+            <View style={styles.chart}>
+              {days.map((d, i) => (
+                <Bar key={d.key} ratio={d.cpm / maxCpm} delay={i * 18} enabled={!reduced} />
+              ))}
+            </View>
+            <View style={styles.chartLabels}>
+              <Text style={T.tiny}>30 days ago</Text>
+              <Text style={T.tiny}>today</Text>
+            </View>
+          </Card>
+        </FadeIn>
+      </View>
     </ScrollView>
   );
 }
 
+function Bar({ ratio, delay, enabled }: { ratio: number; delay: number; enabled: boolean }) {
+  const h = useRef(new Animated.Value(enabled ? 0 : Math.max(3, ratio * 120))).current;
+  useEffect(() => {
+    if (!enabled) {
+      h.setValue(Math.max(3, ratio * 120));
+      return;
+    }
+    Animated.timing(h, {
+      toValue: Math.max(3, ratio * 120),
+      duration: 420,
+      delay,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [ratio, delay, enabled, h]);
+  return (
+    <View style={styles.barWrap}>
+      <Animated.View style={[styles.bar, { height: h, backgroundColor: ratio > 0 ? C.green : C.polar }]} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 16, paddingBottom: 120 },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  content: { paddingBottom: 120 },
+  inner: { paddingHorizontal: 16, paddingTop: 20 },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   avatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 74,
+    height: 74,
+    borderRadius: 37,
     backgroundColor: C.eelLight,
     borderWidth: 2,
     borderColor: C.lime,
@@ -116,18 +148,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 13,
+    paddingVertical: 14,
     borderBottomWidth: 2,
     borderBottomColor: '#f0f0f0',
     gap: 12,
   },
-  lineKey: { fontSize: 15, color: C.ash },
-  lineValue: { fontSize: 15, fontWeight: '800', color: C.graphite, fontVariant: ['tabular-nums'] },
+  lineKey: { fontSize: 16, fontWeight: '500', color: C.ash },
+  lineValue: { fontSize: 16, fontWeight: '700', color: C.graphite, fontVariant: ['tabular-nums'] },
   chartHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  trophy: { backgroundColor: C.amberPale, borderRadius: R.pill, paddingHorizontal: 10, paddingVertical: 5 },
-  trophyText: { fontSize: 11, fontWeight: '800', color: C.goldDark },
+  trophy: { backgroundColor: C.amberPale, borderRadius: R.pill, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 2, borderColor: C.amberLine },
+  trophyText: { fontSize: 11, fontWeight: '700', color: C.goldDark },
   chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 3, height: 120, marginTop: 14 },
   barWrap: { flex: 1, justifyContent: 'flex-end', height: '100%' },
-  bar: { width: '100%', borderRadius: 4, minHeight: 3 },
+  bar: { width: '100%', borderRadius: 4 },
   chartLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
 });

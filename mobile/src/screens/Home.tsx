@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, ScrollView, StyleSheet, View } from 'react-native';
 import { Byte } from '../components/Byte';
 import { HUD } from '../components/HUD';
 import { InfoModal, LessonSheet } from '../components/Modals';
-import { Btn, Card, Chip } from '../components/UI';
+import { Text } from '../components/Text';
+import { Btn, Card } from '../components/UI';
+import { FadeIn, Press3D, PulseRing, useFloat, usePop } from '../motion';
 import { CONFIG, LESSONS, SECTIONS, UNIT_TITLES } from '../data/curriculum';
 import type { Nav } from '../navigation';
 import { useStore } from '../store';
@@ -19,6 +21,7 @@ export function HomeScreen({ nav }: { nav: Nav }) {
   const booted = useRef(false);
   const [sheetIndex, setSheetIndex] = useState<number | null>(null);
   const [lockedIndex, setLockedIndex] = useState<number | null>(null);
+  const reduced = state.settings.reducedMotion;
 
   const resume = useMemo(() => {
     let index = LESSONS.findIndex((l, i) => isUnlocked(state, LESSONS, i) && !state.lessons[l.id]?.completed);
@@ -30,6 +33,7 @@ export function HomeScreen({ nav }: { nav: Nav }) {
   const allDone = LESSONS.every((l) => state.lessons[l.id]?.completed);
   const needsPractice = !!resume.st && resume.st.completed && !resume.st.practicePassed;
   const greetingName = state.profile.name.trim();
+  const fabFloat = useFloat(!reduced);
 
   const open = (lesson: Lesson, index: number) => {
     if (!isUnlocked(state, LESSONS, index)) {
@@ -47,7 +51,7 @@ export function HomeScreen({ nav }: { nav: Nav }) {
     const timer = setTimeout(() => {
       const y = nodeYs.current[resume.lesson.id];
       if (y != null) scrollRef.current?.scrollTo({ y: Math.max(0, y - 90), animated: true });
-    }, 600);
+    }, 650);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -55,17 +59,20 @@ export function HomeScreen({ nav }: { nav: Nav }) {
   const rows: React.ReactNode[] = [];
   let lastSection = -1;
   let lastUnit = -1;
+  let nodeIndex = 0;
   LESSONS.forEach((lesson, i) => {
     if (lesson.section !== lastSection) {
       lastSection = lesson.section;
       const section = SECTIONS[lesson.section];
       lastUnit = -1;
       rows.push(
-        <View key={`section-${lesson.section}`} style={styles.banner}>
-          <Text style={styles.eyebrow}>Section {lesson.section}</Text>
-          <Text style={styles.bannerTitle}>{section?.title}</Text>
-          <Text style={styles.bannerBlurb}>{section?.blurb}</Text>
-        </View>,
+        <FadeIn key={`section-${lesson.section}`} delay={60} from={14} enabled={!reduced} style={styles.bannerWrap}>
+          <View style={styles.banner}>
+            <Text style={styles.eyebrow}>Section {lesson.section}</Text>
+            <Text style={styles.bannerTitle}>{section?.title}</Text>
+            <Text style={styles.bannerBlurb}>{section?.blurb}</Text>
+          </View>
+        </FadeIn>,
       );
     }
     if (lesson.unit !== lastUnit) {
@@ -79,56 +86,33 @@ export function HomeScreen({ nav }: { nav: Nav }) {
     }
     const st = state.lessons[lesson.id];
     const unlocked = isUnlocked(state, LESSONS, i);
-    const completed = !!st?.completed;
-    const active = !completed && unlocked;
+    nodeIndex += 1;
     rows.push(
-      <View key={lesson.id}>
-        {i > 0 ? <View style={styles.connector} /> : null}
-        <Pressable
-          onPress={() => open(lesson, i)}
-          onLayout={(e) => {
-            nodeYs.current[lesson.id] = e.nativeEvent.layout.y;
-          }}
-          style={[
-            styles.node,
-            completed ? styles.nodeDone : null,
-            active ? styles.nodeActive : null,
-            !unlocked ? styles.nodeLocked : null,
-          ]}
-        >
-          <View style={[styles.nodeIcon, completed ? styles.nodeIconDone : null, active ? styles.nodeIconActive : null]}>
-            <Ionicons
-              name={completed ? 'checkmark' : active ? 'play' : 'lock-closed'}
-              size={20}
-              color={completed ? C.greenDark : active ? C.paper : C.mute}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.nodeTitle, !unlocked ? { color: C.ash } : null]}>Lesson {lesson.id}</Text>
-            <Text style={styles.nodeSub} numberOfLines={1}>
-              {lesson.title}
-            </Text>
-            {completed ? (
-              <View style={styles.stars}>
-                {[0, 1, 2].map((s) => (
-                  <Ionicons key={s} name={s < (st?.stars || 0) ? 'star' : 'star-outline'} size={13} color={s < (st?.stars || 0) ? C.gold : C.swan} />
-                ))}
-              </View>
-            ) : null}
-          </View>
-        </Pressable>
-        {completed && !st?.practicePassed ? (
-          <Pressable style={styles.practicePill} onPress={() => nav.go('player', { lessonId: lesson.id, mode: 'practice' })}>
-            <Ionicons name="locate" size={13} color={C.blueDark} />
-            <Text style={styles.practicePillText}>Practice needed</Text>
-          </Pressable>
-        ) : null}
+      <View
+        key={lesson.id}
+        onLayout={(e) => {
+          nodeYs.current[lesson.id] = e.nativeEvent.layout.y;
+        }}
+      >
+        {i > 0 ? <Connector /> : null}
+        <FadeIn delay={Math.min(nodeIndex, 8) * 45} from={10} enabled={!reduced}>
+          <PathNode
+            lesson={lesson}
+            completed={!!st?.completed}
+            active={!st?.completed && unlocked}
+            unlocked={unlocked}
+            stars={st?.stars || 0}
+            practicePassed={!!st?.practicePassed}
+            onPress={() => open(lesson, i)}
+            onPractice={() => nav.go('player', { lessonId: lesson.id, mode: 'practice' })}
+          />
+        </FadeIn>
       </View>,
     );
   });
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: C.paper }}>
       <ScrollView
         ref={scrollRef}
         stickyHeaderIndices={[0]}
@@ -137,39 +121,60 @@ export function HomeScreen({ nav }: { nav: Nav }) {
       >
         <HUD onStats={() => nav.tab('stats')} />
 
-        <Card style={styles.hero}>
-          <Byte size={64} reduced={state.settings.reducedMotion} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.heroTitle}>
-              {greetingName ? `Hi, ${greetingName}!` : state.xp === 0 ? 'Ready to think in 1s and 0s?' : 'Welcome back!'}
-            </Text>
-            <Text style={styles.heroSub}>
-              {allDone
-                ? 'Every lesson is complete. Chase a crown on the speed runs.'
-                : needsPractice
-                  ? `Practice to unlock what comes next: ${resume.lesson.title}`
-                  : `Next up: ${resume.lesson.title} — ${resume.lesson.subtitle}`}
-            </Text>
-            <Btn
-              label={allDone ? 'Practice hub' : needsPractice ? `Practice · ${resume.lesson.id}` : `Continue · ${resume.lesson.id}`}
-              small
-              style={{ marginTop: 12 }}
-              onPress={() => (allDone ? nav.tab('practice') : needsPractice ? nav.go('player', { lessonId: resume.lesson.id, mode: 'practice' }) : setSheetIndex(resume.index))}
-            />
-          </View>
-        </Card>
+        <View style={styles.heroWrap}>
+          <FadeIn enabled={!reduced} from={8}>
+            <Card style={styles.hero}>
+              <Byte size={84} reduced={reduced} mood={needsPractice ? 'worried' : 'idle'} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.heroTitle}>
+                  {greetingName ? `Hi, ${greetingName}!` : state.xp === 0 ? 'Ready to think in 1s and 0s?' : 'Welcome back!'}
+                </Text>
+                <Text style={styles.heroSub}>
+                  {allDone
+                    ? 'Every lesson is complete. Chase a crown on the speed runs.'
+                    : needsPractice
+                      ? `Practice to unlock what comes next: ${resume.lesson.title}`
+                      : `Next up: ${resume.lesson.title} — ${resume.lesson.subtitle}`}
+                </Text>
+                <Btn
+                  label={allDone ? 'Practice hub' : needsPractice ? `Practice · ${resume.lesson.id}` : `Continue · ${resume.lesson.id}`}
+                  small
+                  style={{ marginTop: 16, alignSelf: 'flex-start' }}
+                  onPress={() =>
+                    allDone
+                      ? nav.tab('practice')
+                      : needsPractice
+                        ? nav.go('player', { lessonId: resume.lesson.id, mode: 'practice' })
+                        : setSheetIndex(resume.index)
+                  }
+                />
+              </View>
+            </Card>
+          </FadeIn>
 
-        {rows}
-        <View style={{ height: 40 }} />
+          {rows}
+          <View style={{ height: 40 }} />
+        </View>
       </ScrollView>
 
       {!allDone ? (
-        <Pressable style={styles.fab} onPress={() => setSheetIndex(resume.index)} accessibilityLabel={`Continue lesson ${resume.lesson.id}`}>
-          <Ionicons name="play" size={24} color={C.paper} />
-          <View style={styles.fabBadge}>
-            <Text style={styles.fabBadgeText}>{resume.lesson.id}</Text>
-          </View>
-        </Pressable>
+        <Animated.View style={[styles.fabWrap, reduced ? undefined : fabFloat]}>
+          <Press3D
+            onPress={() => setSheetIndex(resume.index)}
+            bg={C.green}
+            shadowColor={C.greenDark}
+            radius={30}
+            depth={5}
+            style={{ width: 60 }}
+            contentStyle={styles.fab}
+            accessibilityLabel={`Continue lesson ${resume.lesson.id}`}
+          >
+            <Ionicons name="play" size={24} color={C.paper} />
+            <View style={styles.fabBadge}>
+              <Text style={styles.fabBadgeText}>{resume.lesson.id}</Text>
+            </View>
+          </Press3D>
+        </Animated.View>
       ) : null}
 
       <LessonSheet
@@ -216,86 +221,181 @@ export function HomeScreen({ nav }: { nav: Nav }) {
   );
 }
 
+function Connector() {
+  const drift = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(drift, { toValue: 1, duration: 1000, easing: Easing.linear, useNativeDriver: true }),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [drift]);
+  return (
+    <View style={styles.connectorWrap} pointerEvents="none">
+      {[0, 1, 2, 3].map((i) => (
+        <View key={i} style={styles.connectorDot} />
+      ))}
+      <Animated.View
+        style={[
+          styles.connectorSpark,
+          {
+            opacity: drift.interpolate({ inputRange: [0, 0.15, 0.85, 1], outputRange: [0, 1, 1, 0] }),
+            transform: [{ translateY: drift.interpolate({ inputRange: [0, 1], outputRange: [0, 26] }) }],
+          },
+        ]}
+      />
+    </View>
+  );
+}
+
+function PathNode({
+  lesson,
+  completed,
+  active,
+  unlocked,
+  stars,
+  practicePassed,
+  onPress,
+  onPractice,
+}: {
+  lesson: Lesson;
+  completed: boolean;
+  active: boolean;
+  unlocked: boolean;
+  stars: number;
+  practicePassed: boolean;
+  onPress: () => void;
+  onPractice: () => void;
+}) {
+  const starPop = usePop(stars);
+  return (
+    <View style={{ width: '100%', alignItems: 'center' }}>
+      <Press3D
+        onPress={onPress}
+        bg={unlocked ? C.paper : C.polar}
+        shadowColor={completed || active ? C.greenDark : C.swan}
+        radius={R.lg}
+        depth={4}
+        style={{ width: '92%' }}
+        contentStyle={[styles.node, completed || active ? styles.nodeLive : null, !unlocked ? styles.nodeLocked : null]}
+        accessibilityLabel={`Lesson ${lesson.id}, ${lesson.title}${completed ? ', completed' : unlocked ? '' : ', locked'}`}
+      >
+        <View style={styles.iconWrap}>
+          <PulseRing size={46} active={active} />
+          <View
+            style={[
+              styles.nodeIcon,
+              completed ? styles.nodeIconDone : null,
+              active ? styles.nodeIconActive : null,
+            ]}
+          >
+            <Ionicons
+              name={completed ? 'checkmark' : active ? 'play' : 'lock-closed'}
+              size={22}
+              color={completed ? C.greenDark : active ? C.paper : C.ash}
+            />
+          </View>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.nodeTitle, !unlocked ? { color: C.ash } : null]}>Lesson {lesson.id}</Text>
+          <Text style={styles.nodeSub} numberOfLines={1}>
+            {lesson.title}
+          </Text>
+          {completed ? (
+            <Animated.View style={[styles.stars, starPop]}>
+              {[0, 1, 2].map((s) => (
+                <Ionicons key={s} name={s < stars ? 'star' : 'star-outline'} size={16} color={s < stars ? C.gold : C.swan} />
+              ))}
+            </Animated.View>
+          ) : null}
+        </View>
+      </Press3D>
+      {completed && !practicePassed ? (
+        <Press3D
+          onPress={onPractice}
+          bg={C.bluePale}
+          shadowColor="#bfe4fb"
+          radius={R.pill}
+          depth={3}
+          style={{ marginTop: 12 }}
+          contentStyle={styles.practicePill}
+          accessibilityLabel={`Practice lesson ${lesson.id}`}
+        >
+          <Ionicons name="locate" size={13} color={C.blueDark} />
+          <Text style={styles.practicePillText}>Practice needed</Text>
+        </Press3D>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 16, paddingBottom: 120 },
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 6, padding: 18 },
-  heroTitle: { ...T.h2, fontSize: 20 },
-  heroSub: { ...T.body, fontSize: 14, marginTop: 4 },
+  content: { paddingBottom: 120 },
+  heroWrap: { paddingHorizontal: 16, paddingTop: 20 },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 20 },
+  heroTitle: { ...T.h2, fontSize: 21, lineHeight: 26, letterSpacing: -0.6 },
+  heroSub: { ...T.body, fontSize: 14, lineHeight: 20, marginTop: 4 },
+  bannerWrap: { marginTop: 24, marginBottom: 10 },
   banner: {
     backgroundColor: C.green,
     borderRadius: R.lg,
     borderWidth: 2,
     borderColor: C.greenDark,
-    padding: 18,
-    marginTop: 22,
-    marginBottom: 8,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    shadowColor: C.greenDark,
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
-  eyebrow: { color: C.paper, fontSize: 11, fontWeight: '800', letterSpacing: 1.1, textTransform: 'uppercase' },
-  bannerTitle: { color: C.paper, fontSize: 21, fontWeight: '800', marginTop: 2 },
-  bannerBlurb: { color: C.paper, fontSize: 13, opacity: 0.95, marginTop: 2 },
-  unitRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 18, marginBottom: 4 },
+  eyebrow: { color: C.paper, fontSize: 11, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase', opacity: 0.92 },
+  bannerTitle: { color: C.paper, fontSize: 22, fontWeight: '700', letterSpacing: -0.6, marginTop: 2, lineHeight: 26 },
+  bannerBlurb: { color: C.paper, fontSize: 13, fontWeight: '500', opacity: 0.94, marginTop: 2, lineHeight: 18 },
+  unitRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 22, marginBottom: 4, paddingHorizontal: 2 },
   unitDot: { width: 8, height: 8, borderRadius: 2, backgroundColor: C.green },
-  unitTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 0.9, color: C.ash, textTransform: 'uppercase' },
-  connector: { alignSelf: 'center', height: 26, borderLeftWidth: 4, borderStyle: 'dashed', borderColor: C.swan, marginVertical: 4 },
+  unitTitle: { fontSize: 12, fontWeight: '700', letterSpacing: 1, color: C.ash, textTransform: 'uppercase' },
+  connectorWrap: { alignSelf: 'center', height: 26, width: 8, alignItems: 'center', justifyContent: 'center', gap: 4, marginVertical: 4 },
+  connectorDot: { width: 4, height: 3, borderRadius: 2, backgroundColor: C.swan },
+  connectorSpark: { position: 'absolute', top: 0, width: 4, height: 8, borderRadius: 2, backgroundColor: C.green },
   node: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
+    padding: 14,
     borderWidth: 2,
     borderColor: C.swan,
+    borderBottomWidth: 0,
     borderRadius: R.lg,
-    backgroundColor: C.paper,
-    padding: 13,
-    width: '92%',
-    alignSelf: 'center',
   },
-  nodeDone: { borderColor: C.green },
-  nodeActive: { borderColor: C.green },
+  nodeLive: { borderColor: C.green },
   nodeLocked: { backgroundColor: C.polar },
-  nodeIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: C.swan,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  iconWrap: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  nodeIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: C.swan, alignItems: 'center', justifyContent: 'center' },
   nodeIconDone: { backgroundColor: C.eelLight },
-  nodeIconActive: { backgroundColor: C.green },
-  nodeTitle: { fontSize: 16, fontWeight: '800', color: C.graphite },
-  nodeSub: { fontSize: 13, color: C.ash, marginTop: 2 },
-  stars: { flexDirection: 'row', gap: 3, marginTop: 6 },
+  nodeIconActive: { backgroundColor: C.green, shadowColor: C.greenDark, shadowOpacity: 1, shadowRadius: 0, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  nodeTitle: { fontSize: 16, fontWeight: '700', color: C.graphite, lineHeight: 20 },
+  nodeSub: { fontSize: 13, fontWeight: '500', color: C.ash, marginTop: 2, lineHeight: 17 },
+  stars: { flexDirection: 'row', gap: 4, marginTop: 8 },
   practicePill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    alignSelf: 'center',
-    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderWidth: 2,
     borderColor: '#bfe4fb',
-    backgroundColor: C.bluePale,
+    borderBottomWidth: 0,
     borderRadius: R.pill,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
   },
-  practicePillText: { fontSize: 10.5, fontWeight: '800', letterSpacing: 0.7, textTransform: 'uppercase', color: C.blueDark },
+  practicePillText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.7, textTransform: 'uppercase', color: C.blueDark },
+  fabWrap: { position: 'absolute', right: 20, bottom: 96 },
   fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 96,
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: C.green,
-    borderWidth: 2,
-    borderColor: C.greenDark,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 6,
-    shadowColor: C.greenDark,
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
   },
   fabBadge: {
     position: 'absolute',
@@ -308,5 +408,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 1,
   },
-  fabBadgeText: { fontSize: 10, fontWeight: '800', color: C.greenDark },
+  fabBadgeText: { fontSize: 10, fontWeight: '700', color: C.greenDark },
 });

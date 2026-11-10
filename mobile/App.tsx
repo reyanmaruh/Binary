@@ -1,14 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
+import { SpaceGrotesk_400Regular, SpaceGrotesk_500Medium, SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
+import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   Platform,
   Pressable,
   SafeAreaView,
   StatusBar as RNStatusBar,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import type { Nav, Route, TabName } from './src/navigation';
@@ -22,13 +25,87 @@ import { SettingsScreen } from './src/screens/Settings';
 import { StoreProvider, useStore } from './src/store';
 import { C } from './src/theme';
 import type { Mode, SessionResult } from './src/types';
+import { Text } from './src/components/Text';
 
-const TABS: { name: TabName; label: string; icon: keyof typeof Ionicons.glyphMap; outline: keyof typeof Ionicons.glyphMap }[] = [
+const TABS: {
+  name: TabName;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  outline: keyof typeof Ionicons.glyphMap;
+}[] = [
   { name: 'home', label: 'Learn', icon: 'home', outline: 'home-outline' },
   { name: 'practice', label: 'Practice', icon: 'refresh-circle', outline: 'refresh-circle-outline' },
   { name: 'stats', label: 'Stats', icon: 'stats-chart', outline: 'stats-chart-outline' },
   { name: 'settings', label: 'Settings', icon: 'options', outline: 'options-outline' },
 ];
+
+/** The web's `screenIn`: fade plus a 6px rise every time the route changes. */
+function Scene({ routeKey, children }: { routeKey: string; children: React.ReactNode }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    v.setValue(0);
+    Animated.timing(v, { toValue: 1, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [routeKey, v]);
+  return (
+    <Animated.View
+      style={{
+        flex: 1,
+        opacity: v,
+        transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }],
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+function TabBar({ current, nav }: { current: Route; nav: Nav }) {
+  return (
+    <View style={styles.tabbar}>
+      {TABS.map((t) => {
+        const active = current.name === t.name;
+        return (
+          <TabButton key={t.name} active={active} onPress={() => nav.tab(t.name)} icon={t.icon} outline={t.outline} label={t.label} />
+        );
+      })}
+    </View>
+  );
+}
+
+function TabButton({
+  active,
+  onPress,
+  icon,
+  outline,
+  label,
+}: {
+  active: boolean;
+  onPress: () => void;
+  icon: keyof typeof Ionicons.glyphMap;
+  outline: keyof typeof Ionicons.glyphMap;
+  label: string;
+}) {
+  const scale = useRef(new Animated.Value(active ? 1.06 : 1)).current;
+  useEffect(() => {
+    Animated.spring(scale, { toValue: active ? 1.06 : 1, useNativeDriver: true, friction: 6, tension: 180 }).start();
+  }, [active, scale]);
+  return (
+    <Pressable
+      onPress={onPress}
+      style={styles.tab}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
+    >
+      {({ pressed }) => (
+        <Animated.View style={{ alignItems: 'center', gap: 4, transform: [{ scale: pressed ? 0.96 : scale }] }}>
+          <Ionicons name={active ? icon : outline} size={26} color={active ? C.blue : C.mute} />
+          <Text style={[styles.tabLabel, active ? { color: C.blue } : null]}>{label}</Text>
+        </Animated.View>
+      )}
+    </Pressable>
+  );
+}
 
 function Root() {
   const { state, ready } = useStore();
@@ -85,36 +162,27 @@ function Root() {
   return (
     <View style={{ flex: 1, backgroundColor: C.paper }}>
       {Platform.OS === 'android' ? <View style={{ height: RNStatusBar.currentHeight || 0 }} /> : null}
-      <View style={{ flex: 1 }}>{screen}</View>
-      {showTabs ? (
-        <View style={styles.tabbar}>
-          {TABS.map((t) => {
-            const active = current.name === t.name;
-            return (
-              <Pressable
-                key={t.name}
-                style={styles.tab}
-                onPress={() => nav.tab(t.name)}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-              >
-                <Ionicons name={active ? t.icon : t.outline} size={24} color={active ? C.blue : C.mute} />
-                <Text style={[styles.tabLabel, active ? { color: C.blue } : null]}>{t.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : null}
+      <View style={{ flex: 1 }}>
+        <Scene routeKey={`${current.name}-${stack.length}`}>{screen}</Scene>
+      </View>
+      {showTabs ? <TabBar current={current} nav={nav} /> : null}
     </View>
   );
 }
 
 export default function App() {
+  const [loaded] = useFonts({
+    SpaceGrotesk_400Regular,
+    SpaceGrotesk_500Medium,
+    SpaceGrotesk_600SemiBold,
+    SpaceGrotesk_700Bold,
+  });
+
   return (
     <StoreProvider>
       <StatusBar style="dark" />
       <SafeAreaView style={styles.root}>
-        <Root />
+        {loaded ? <Root /> : <View style={styles.loading} />}
       </SafeAreaView>
     </StoreProvider>
   );
@@ -131,10 +199,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingTop: 8,
     paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    paddingHorizontal: 6,
     backgroundColor: C.paper,
     borderTopWidth: 2,
     borderTopColor: C.swan,
+    shadowColor: C.graphite,
+    shadowOpacity: 0.07,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: -6 },
+    elevation: 12,
   },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3 },
-  tabLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 0.7, textTransform: 'uppercase', color: C.mute },
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 6, borderRadius: 12 },
+  tabLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', color: C.mute },
 });
