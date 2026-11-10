@@ -49,6 +49,7 @@ interface Store {
   finishSession: (input: SessionInput) => SessionResult;
   loseHeart: () => number;
   refillWithGems: () => boolean;
+  refillHeartsFree: () => void;
   buyOneHeart: () => boolean;
   addMiss: (key: string) => void;
   toggleSetting: (key: 'haptics' | 'reducedMotion') => void;
@@ -130,6 +131,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, [state.gems, state.hearts]);
 
+  const refillHeartsFree = useCallback(() => {
+    setState((s) => ({ ...s, hearts: CONFIG.heartsMax, heartsRefilledAt: Date.now() }));
+  }, []);
+
   const buyOneHeart = useCallback(() => {
     if (state.hearts >= CONFIG.heartsMax || state.gems < 20) return false;
     setState((s) => ({
@@ -162,17 +167,31 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const previous = input.lessonId ? state.lessons[input.lessonId] : undefined;
       const ls: LessonState = previous ? { ...previous } : lessonStateDefault();
       const accuracy = input.attempts > 0 ? input.correct / input.attempts : 0;
-      const cpm = input.convMs > 0 ? Math.round((input.convCorrect / (input.convMs / 60000)) * 10) / 10 : null;
+      let cpm = input.convMs > 0 ? Math.round((input.convCorrect / (input.convMs / 60000)) * 10) / 10 : null;
+      // A run where most answers were wrong has no meaningful speed score.
+      if (input.mode !== 'boss' && input.attempts > 0 && input.correct / input.attempts < 0.5) cpm = null;
+
+      const isLessonRun = input.mode === 'lesson' || input.mode === 'ghost';
+      const metAccuracy = lesson ? accuracy >= lesson.passCriteria.accuracy : accuracy >= CONFIG.practiceGate;
+      const cpmGate = lesson?.passCriteria.cpm ?? null;
+      const metCpm = !cpmGate || (cpm != null && cpm >= cpmGate);
 
       let passed = false;
+      let gateNote: 'accuracy' | 'cpm' | '' = '';
       if (!input.failed) {
-        if (input.mode === 'lesson' && lesson) passed = accuracy >= lesson.passCriteria.accuracy;
-        else if (input.mode === 'practice') passed = accuracy >= CONFIG.practiceGate;
-        else passed = true;
+        if (isLessonRun && lesson) {
+          passed = metAccuracy && metCpm;
+          if (!passed) gateNote = !metAccuracy ? 'accuracy' : 'cpm';
+        } else if (input.mode === 'practice') {
+          passed = accuracy >= CONFIG.practiceGate;
+          if (!passed) gateNote = 'accuracy';
+        } else {
+          passed = true;
+        }
       }
 
-      const firstClear = !!lesson && input.mode === 'lesson' && passed && !ls.completed;
-      const baseXp = lesson && input.mode === 'lesson' ? (firstClear ? lesson.xp : Math.round(lesson.xp * CONFIG.replayXpFactor)) : 0;
+      const firstClear = !!lesson && isLessonRun && passed && !ls.completed;
+      const baseXp = lesson && isLessonRun ? (firstClear ? lesson.xp : Math.round(lesson.xp * CONFIG.replayXpFactor)) : 0;
       const rawXp = baseXp + Math.max(0, input.answerXp);
 
       const daily = { ...state.daily, pb: { ...state.daily.pb } };
@@ -187,7 +206,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       daily.xp += xpEarned;
 
       let gemsWanted = firstClear ? CONFIG.firstClearGems : 0;
-      const newBest = passed && cpm != null && (ls.bestCpm == null || cpm > ls.bestCpm);
+      const newBest = isLessonRun && passed && cpm != null && (ls.bestCpm == null || cpm > ls.bestCpm);
       if (newBest && lesson && daily.pb[lesson.id] !== daily.day) {
         gemsWanted += CONFIG.pbGems;
         daily.pb[lesson.id] = daily.day;
@@ -195,25 +214,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const gemsEarned = Math.min(gemsWanted, Math.max(0, CONFIG.dailyGemCap - daily.gems));
       daily.gems += gemsEarned;
 
-      const stars =
-        passed && cpm != null
-          ? cpm >= CONFIG.cpm.dec2bin[2]
-            ? 3
-            : cpm >= CONFIG.cpm.dec2bin[1]
-              ? 2
-              : 1
-          : 0;
+      let stars = 0;
+      let crown = false;
+      if (passed && isLessonRun) {
+        const gates = CONFIG.cpm.dec2bin;
+        if (metAccuracy) stars = 1;
+        if (cpm != null && cpm >= gates[1]) stars = 2;
+        if (cpm != null && cpm >= gates[2]) stars = 3;
+        crown = cpm != null && cpm >= gates[3];
+      }
 
       const lessons = { ...state.lessons };
       if (lesson) {
         if (passed) {
-          if (input.mode === 'lesson') ls.completed = true;
+          if (isLessonRun) {
+            ls.completed = true;
+            ls.crown = !!(ls.crown || crown);
+            ls.bestAccuracy = Math.max(ls.bestAccuracy ?? 0, accuracy);
+            ls.stars = Math.max(ls.stars, stars);
+            if (cpm != null && (ls.bestCpm == null || cpm > ls.bestCpm)) ls.bestCpm = cpm;
+          }
           if (input.mode === 'practice') {
             ls.practicePassed = true;
             ls.practiceBest = Math.max(ls.practiceBest || 0, accuracy);
           }
-          ls.stars = Math.max(ls.stars, stars);
-          if (cpm != null && (ls.bestCpm == null || cpm > ls.bestCpm)) ls.bestCpm = cpm;
         }
         ls.attempts += 1;
         lessons[lesson.id] = ls;
@@ -251,6 +275,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         accuracy,
         cpm,
         stars,
+        crown,
+        gateNote,
         xpEarned,
         gemsEarned,
         cappedXp: rawXp - xpEarned,
@@ -273,12 +299,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       finishSession,
       loseHeart,
       refillWithGems,
+      refillHeartsFree,
       buyOneHeart,
       addMiss,
       toggleSetting,
       reset,
     }),
-    [state, ready, setProfile, completeOnboarding, finishSession, loseHeart, refillWithGems, buyOneHeart, addMiss, toggleSetting, reset],
+    [state, ready, setProfile, completeOnboarding, finishSession, loseHeart, refillWithGems, refillHeartsFree, buyOneHeart, addMiss, toggleSetting, reset],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

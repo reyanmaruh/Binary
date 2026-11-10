@@ -4,11 +4,16 @@ import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { CONFIG } from '../data/curriculum';
 import { useBump, useFloat } from '../motion';
 import { useStore } from '../store';
-import { C, R } from '../theme';
-import { fmtCountdown, xpProgress } from '../utils';
+import { C } from '../theme';
+import { xpProgress } from '../utils';
 import { HeartsModal, ShopModal } from './Modals';
 import { Text } from './Text';
 
+/**
+ * The sticky header: one wide XP tile that carries the level badge and the
+ * level bar, plus compact gem and heart tiles. Everything is a single row of
+ * equal-height tiles so it never reflows as the numbers grow.
+ */
 export function HUD({ onStats }: { onStats: () => void }) {
   const { state, refillWithGems, buyOneHeart } = useStore();
   const [modal, setModal] = useState<null | 'hearts' | 'shop'>(null);
@@ -17,56 +22,54 @@ export function HUD({ onStats }: { onStats: () => void }) {
 
   const xpScale = useBump(state.xp, 1.03);
   const gemScale = useBump(state.gems, 1.07);
-  const heartPulse = useFloat(state.hearts === 0, 3, 800);
   const lowHeart = state.hearts === 0;
+  const heartPulse = useFloat(lowHeart, 2, 800);
 
   return (
     <>
       <View style={styles.hud}>
-        <Animated.View style={{ flex: 1, transform: [{ scale: xpScale }] }}>
-          <Animated.View style={{ flex: 1 }}>
-            <Pressable
-              style={styles.xpBlock}
-              accessibilityRole="button"
-              accessibilityLabel={`Level ${xp.lv}, ${state.xp} XP. Open stats`}
-              onPress={onStats}
-            >
+        <Animated.View style={[styles.xpWrap, { transform: [{ scale: xpScale }] }]}>
+          <Pressable
+            style={({ pressed }) => [styles.xpTile, pressed ? styles.pressed : null]}
+            accessibilityRole="button"
+            accessibilityLabel={`Level ${xp.lv}, ${state.xp} XP, ${xp.into} of ${xp.need} XP to level ${xp.lv + 1}. Open stats`}
+            onPress={onStats}
+          >
+            <View style={styles.xpRow}>
               <View style={styles.level}>
                 <Text style={styles.levelText}>{xp.lv}</Text>
               </View>
-              <Ionicons name="sparkles" size={19} color={C.goldDark} />
-              <View style={styles.xpTextRow}>
-                <Text style={styles.xpNum}>{state.xp}</Text>
-                <Text style={styles.xpCap}>XP</Text>
-              </View>
-              <View style={styles.xpBarTrack}>
-                <View style={[styles.xpBarFill, { width: `${Math.round(xp.ratio * 100)}%` }]} />
-              </View>
-            </Pressable>
-          </Animated.View>
+              <Ionicons name="sparkles" size={17} color={C.goldDark} />
+              <Text style={styles.xpNum}>{state.xp}</Text>
+              <Text style={styles.xpCap}>XP</Text>
+            </View>
+            <View style={styles.xpTrack}>
+              <View style={[styles.xpFill, { width: `${Math.round(xp.ratio * 100)}%` }]} />
+            </View>
+          </Pressable>
         </Animated.View>
 
         <Animated.View style={{ transform: [{ scale: gemScale }] }}>
           <Pressable
-            style={styles.stat}
+            style={({ pressed }) => [styles.tile, pressed ? styles.pressed : null]}
             onPress={() => setModal('shop')}
             accessibilityRole="button"
-            accessibilityLabel={`${state.gems} gems. Open shop`}
+            accessibilityLabel={`${state.gems} gems. Open the gem shop`}
           >
             <Ionicons name="diamond" size={18} color={C.beet} />
-            <Text style={[styles.statNum, { color: C.beet }]}>{state.gems}</Text>
+            <Text style={[styles.tileNum, { color: C.beet }]}>{state.gems}</Text>
           </Pressable>
         </Animated.View>
 
         <Animated.View style={lowHeart ? heartPulse : undefined}>
           <Pressable
-            style={[styles.stat, lowHeart ? styles.heartOut : null]}
+            style={({ pressed }) => [styles.tile, lowHeart ? styles.heartOut : null, pressed ? styles.pressed : null]}
             onPress={() => setModal('hearts')}
             accessibilityRole="button"
-            accessibilityLabel={`${state.hearts} of ${CONFIG.heartsMax} hearts. Open refill timer`}
+            accessibilityLabel={`${state.hearts} of ${CONFIG.heartsMax} hearts. Open the refill timer`}
           >
             <Ionicons name={state.hearts > 0 ? 'heart' : 'heart-outline'} size={18} color={C.red} />
-            <Text style={[styles.statNum, { color: C.red }]}>{state.hearts}</Text>
+            <Text style={[styles.tileNum, { color: C.red }]}>{state.hearts}</Text>
           </Pressable>
         </Animated.View>
       </View>
@@ -97,10 +100,11 @@ export function HUD({ onStats }: { onStats: () => void }) {
 const styles = StyleSheet.create({
   hud: {
     flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
+    alignItems: 'stretch',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingTop: 9,
+    paddingBottom: 10,
     backgroundColor: C.paper,
     borderBottomWidth: 2,
     borderBottomColor: C.swan,
@@ -108,21 +112,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
+    elevation: 6,
   },
-  xpBlock: {
+  xpWrap: { flex: 1, minWidth: 0 },
+  xpTile: {
     flex: 1,
     backgroundColor: C.eelLight,
-    borderRadius: 14,
-    paddingHorizontal: 11,
-    paddingVertical: 8,
-    paddingLeft: 9,
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    columnGap: 7,
-    rowGap: 6,
+    borderRadius: 16,
+    paddingLeft: 10,
+    paddingRight: 11,
+    paddingTop: 7,
+    paddingBottom: 8,
+    justifyContent: 'space-between',
+    gap: 6,
   },
+  xpRow: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 26 },
   level: {
     width: 26,
     height: 26,
@@ -130,28 +134,34 @@ const styles = StyleSheet.create({
     backgroundColor: C.green,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: C.greenDark,
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    borderBottomWidth: 2,
+    borderBottomColor: C.greenDark,
+    marginBottom: 1,
   },
-  levelText: { color: C.paper, fontWeight: '700', fontSize: 11 },
-  xpTextRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4, flex: 1 },
-  xpNum: { fontSize: 19, fontWeight: '700', color: C.greenDark, letterSpacing: -0.4, fontVariant: ['tabular-nums'] },
+  levelText: { color: C.paper, fontWeight: '700', fontSize: 11, lineHeight: 13 },
+  xpNum: {
+    fontSize: 19,
+    fontWeight: '700',
+    color: C.greenDark,
+    letterSpacing: -0.4,
+    fontVariant: ['tabular-nums'],
+    lineHeight: 22,
+  },
   xpCap: { fontSize: 10, fontWeight: '700', letterSpacing: 0.9, color: C.greenDark, opacity: 0.6 },
-  xpBarTrack: { width: '100%', height: 6, borderRadius: 3, backgroundColor: 'rgba(88,204,2,0.16)', overflow: 'hidden' },
-  xpBarFill: { height: 6, borderRadius: 3, backgroundColor: C.green },
-  stat: {
-    borderRadius: 14,
+  xpTrack: { height: 6, borderRadius: 3, backgroundColor: 'rgba(88,204,2,0.16)', overflow: 'hidden' },
+  xpFill: { height: 6, borderRadius: 3, backgroundColor: C.green },
+  tile: {
+    height: '100%',
+    minWidth: 58,
+    borderRadius: 16,
     backgroundColor: C.polar,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    gap: 5,
+    paddingHorizontal: 11,
   },
-  statNum: { fontSize: 17, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  tileNum: { fontSize: 17, fontWeight: '700', fontVariant: ['tabular-nums'] },
   heartOut: { backgroundColor: C.heartPale },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.97 }] },
 });

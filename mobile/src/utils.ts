@@ -68,6 +68,8 @@ export function lessonStateDefault() {
   return {
     stars: 0,
     bestCpm: null as number | null,
+    bestAccuracy: null as number | null,
+    crown: false,
     completed: false,
     practicePassed: false,
     practiceBest: null as number | null,

@@ -1,22 +1,25 @@
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useState } from 'react';
 import { Animated, ScrollView, StyleSheet, View } from 'react-native';
 import { Byte } from '../components/Byte';
 import { Text } from '../components/Text';
 import { Btn } from '../components/UI';
+import { InfoModal } from '../components/Modals';
 import { LESSONS } from '../data/curriculum';
 import { FadeIn, useFloat, usePop } from '../motion';
 import type { Nav, ResultsParams } from '../navigation';
 import { useStore } from '../store';
 import { C, R, T } from '../theme';
-import { fmtCpm, isUnlocked, pct } from '../utils';
+import { fmtCpm, isUnlocked, pct, xpProgress } from '../utils';
 
 export function ResultsScreen({ result, nav }: { result: ResultsParams; nav: Nav }) {
-  const { state } = useStore();
+  const { state, refillHeartsFree } = useStore();
   const lesson = LESSONS.find((l) => l.id === result.lessonId);
   const lessonIndex = lesson ? LESSONS.findIndex((l) => l.id === lesson.id) : -1;
   const nextLesson = lessonIndex >= 0 ? LESSONS[lessonIndex + 1] : undefined;
   const reduced = state.settings.reducedMotion;
+  const [levelUp, setLevelUp] = useState(!!result.levelUp);
+  const xpNow = xpProgress(state.xp);
   const gemPop = usePop(result.gemsEarned, 0.7);
   const gemWiggle = useFloat(!reduced, 0, 900, 0);
 
@@ -43,7 +46,11 @@ export function ResultsScreen({ result, nav }: { result: ResultsParams; nav: Nav
       : `You answered ${pct(result.accuracy)}.`;
   } else if (lesson) {
     title = result.passed ? 'Lesson complete!' : 'Not passed yet';
-    sub = result.passed ? lesson.title : `You answered ${pct(result.accuracy)}.`;
+    sub = result.passed
+      ? lesson.title
+      : result.gateNote === 'cpm'
+        ? 'Too slow this time.'
+        : `You answered ${pct(result.accuracy)}.`;
   }
 
   const canNext = !!nextLesson && isUnlocked(state, LESSONS, lessonIndex + 1);
@@ -58,11 +65,14 @@ export function ResultsScreen({ result, nav }: { result: ResultsParams; nav: Nav
           <Text style={styles.sub}>{sub}</Text>
         </FadeIn>
 
-        {result.mode === 'lesson' ? (
+        {result.mode === 'lesson' || result.mode === 'ghost' ? (
           <View style={styles.stars}>
             {[0, 1, 2].map((i) => (
               <Star key={i} filled={i < result.stars} delay={i * 130} enabled={!reduced} />
             ))}
+            {result.crown ? (
+              <MaterialCommunityIcons name="crown" size={32} color={C.goldDark} style={{ marginLeft: 4 }} />
+            ) : null}
           </View>
         ) : null}
 
@@ -92,12 +102,22 @@ export function ResultsScreen({ result, nav }: { result: ResultsParams; nav: Nav
 
         <View style={{ width: '100%', gap: 10, marginTop: 20 }}>
           {result.failed ? (
-            <Btn label="Try again" onPress={() => nav.go('player', { lessonId: lesson?.id, mode: result.mode })} />
-          ) : result.mode === 'lesson' && result.passed && nextLesson && !canNext ? (
+            <Btn
+              label="Retry (hearts refilled)"
+              onPress={() => {
+                refillHeartsFree();
+                nav.go('player', { lessonId: lesson?.id, mode: result.mode === 'ghost' ? 'ghost' : 'lesson' });
+              }}
+            />
+          ) : result.mode === 'practice' && !result.passed ? (
+            <Btn label="Practice again" onPress={() => nav.go('player', { lessonId: lesson?.id, mode: 'practice' })} />
+          ) : (result.mode === 'lesson' || result.mode === 'ghost') && result.passed && nextLesson && !canNext ? (
             <Btn
               label={`Practice to unlock · ${nextLesson.id}`}
               onPress={() => nav.go('player', { lessonId: lesson?.id, mode: 'practice' })}
             />
+          ) : result.mode === 'boss' || result.mode === 'flash' || result.mode === 'weak' ? (
+            <Btn label="Go again" onPress={() => nav.go('player', { mode: result.mode })} />
           ) : result.passed && nextLesson ? (
             <Btn
               label={`Next lesson · ${nextLesson.id}`}
@@ -113,6 +133,16 @@ export function ResultsScreen({ result, nav }: { result: ResultsParams; nav: Nav
           <Btn label="Home" variant="ghost" onPress={() => nav.tab('home')} />
         </View>
       </ScrollView>
+
+      <InfoModal
+        visible={levelUp}
+        icon="sparkles"
+        title={`Level ${xpNow.lv}!`}
+        body={`You reached level ${xpNow.lv}. ${Math.max(0, xpNow.need - xpNow.into)} XP to level ${xpNow.lv + 1}.`}
+        primaryLabel="Nice"
+        onPrimary={() => setLevelUp(false)}
+        onClose={() => setLevelUp(false)}
+      />
     </View>
   );
 }

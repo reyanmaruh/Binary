@@ -1,4 +1,4 @@
-export type Mode = 'lesson' | 'practice' | 'boss' | 'flash' | 'weak';
+export type Mode = 'lesson' | 'practice' | 'boss' | 'flash' | 'weak' | 'ghost';
 
 export type ItemType = 'TAP' | 'NUM' | 'MCQ' | 'MATCH' | 'ORDER' | 'SPOT' | 'BLANK' | 'BOSS';
 
@@ -49,6 +49,8 @@ export interface Lesson {
 export interface LessonState {
   stars: number;
   bestCpm: number | null;
+  bestAccuracy: number | null;
+  crown: boolean;
   completed: boolean;
   practicePassed: boolean;
   practiceBest: number | null;
@@ -112,6 +114,8 @@ export interface SessionResult {
   accuracy: number;
   cpm: number | null;
   stars: number;
+  crown: boolean;
+  gateNote: 'accuracy' | 'cpm' | '';
   xpEarned: number;
   gemsEarned: number;
   cappedXp: number;

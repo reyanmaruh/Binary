@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Animated, Easing, ScrollView, StyleSheet, View } from 'react-native';
 import { HeartsModal } from '../components/Modals';
@@ -10,7 +10,7 @@ import { FadeIn, Press3D, Tap, useBump, useFloat, usePop } from '../motion';
 import { useStore } from '../store';
 import { C, R, T } from '../theme';
 import type { AppState, Item, Mode } from '../types';
-import { fmtCountdown, itemKey, toBin } from '../utils';
+import { fmtCountdown, itemKey, shuffle, toBin } from '../utils';
 import { Question } from '../components/Question';
 
 interface Params {
@@ -33,26 +33,56 @@ function buildItems(lesson: (typeof LESSONS)[number], mode: Mode, state: AppStat
     return all.slice(0, 15);
   }
   if (mode === 'flash') return lesson.items.slice(0, 15);
-  return lesson.items;
+  if (mode === 'practice') return shuffle(lesson.items).slice(0, Math.min(12, lesson.items.length));
+  return lesson.items.slice(0, CONFIG.sessionItemCap);
 }
 
 function Segment({ done, now }: { done: boolean; now: boolean }) {
   const fill = useRef(new Animated.Value(done ? 1 : 0)).current;
+  const pop = useRef(new Animated.Value(1)).current;
+  const was = useRef(done);
   useEffect(() => {
     if (!done) {
       fill.setValue(0);
+      was.current = false;
       return;
     }
     Animated.spring(fill, { toValue: 1, useNativeDriver: false, friction: 8, tension: 120 }).start();
-  }, [done, fill]);
+    if (!was.current) {
+      was.current = true;
+      pop.setValue(1);
+      Animated.sequence([
+        Animated.timing(pop, { toValue: 1.3, duration: 120, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.spring(pop, { toValue: 1, useNativeDriver: true, friction: 6, tension: 140 }),
+      ]).start();
+    }
+  }, [done, fill, pop]);
   return (
-    <View style={[styles.segment, now ? styles.segmentNow : null]}>
+    <Animated.View style={[styles.segment, now ? styles.segmentNow : null, { transform: [{ scaleY: pop }] }]}>
       <Animated.View
         style={[
           styles.segmentFill,
           { width: fill.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) },
         ]}
       />
+    </Animated.View>
+  );
+}
+
+function FlashBar({ itemKey: key }: { itemKey: string }) {
+  const w = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    w.setValue(1);
+    Animated.timing(w, {
+      toValue: 0,
+      duration: CONFIG.flashItemMs,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start();
+  }, [key, w]);
+  return (
+    <View style={styles.flashBar}>
+      <Animated.View style={[styles.flashFill, { transform: [{ scaleX: w }] }]} />
     </View>
   );
 }
@@ -106,12 +136,13 @@ function Feedback({
 }
 
 export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
-  const { state, finishSession, loseHeart, addMiss } = useStore();
+  const { state, finishSession, loseHeart, addMiss, refillWithGems } = useStore();
   const lesson = LESSONS.find((l) => l.id === params.lessonId) || LESSONS[0];
   const mode = params.mode;
   const [items] = useState<Item[]>(() => buildItems(lesson, mode, state));
 
-  const [phase, setPhase] = useState<'theory' | 'items'>(mode === 'lesson' ? 'theory' : 'items');
+  const showsTheory = mode === 'lesson' || mode === 'ghost';
+  const [phase, setPhase] = useState<'theory' | 'items'>(showsTheory ? 'theory' : 'items');
   const [theoryIndex, setTheoryIndex] = useState(0);
   const [index, setIndex] = useState(0);
   const [attemptKey, setAttemptKey] = useState(0);
@@ -121,11 +152,14 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
   const [xp, setXp] = useState(0);
   const [heartsModal, setHeartsModal] = useState(false);
   const [bossLeft, setBossLeft] = useState<number>(CONFIG.bossDurationSec);
-  const [flashLeft, setFlashLeft] = useState<number>(CONFIG.flashItemMs);
+  const [elapsed, setElapsed] = useState(0);
   const [combo, setCombo] = useState(0);
+  const [barWidth, setBarWidth] = useState(0);
+  const [ghostFrac, setGhostFrac] = useState(0);
 
   const answered = useRef(false);
   const done = useRef(false);
+  const startedAt = useRef(Date.now());
   const stats = useRef({
     attempts: 0,
     correct: 0,
@@ -135,7 +169,6 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
     maxCombo: 0,
     xp: 0,
     qStart: Date.now(),
-    startedAt: Date.now(),
   });
 
   const item = items[index];
@@ -143,6 +176,12 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
   const xpScale = useBump(xp, 1.14);
   const heartBob = useFloat(hearts === 0, 3, 800);
   const feedbackPop = useRef(new Animated.Value(1)).current;
+  const ghostCpm = mode === 'ghost' ? state.lessons[lesson.id]?.bestCpm ?? null : null;
+  const multiplier = combo >= 4 ? CONFIG.comboMaxMultiplier : combo === 3 ? 2 : combo === 2 ? 1.5 : 1;
+
+  useEffect(() => {
+    setHearts(state.hearts);
+  }, [state.hearts]);
 
   const finish = (failed = false) => {
     if (done.current) return;
@@ -150,7 +189,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
     const s = stats.current;
     const res = finishSession({
       mode,
-      lessonId: mode === 'lesson' || mode === 'practice' ? lesson.id : undefined,
+      lessonId: mode === 'lesson' || mode === 'practice' || mode === 'ghost' ? lesson.id : undefined,
       attempts: s.attempts,
       correct: s.correct,
       convCorrect: s.convCorrect,
@@ -166,7 +205,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
   finishRef.current = finish;
 
   useEffect(() => {
-    if ((mode === 'lesson' || mode === 'boss' || mode === 'flash') && state.hearts <= 0) {
+    if (mode === 'lesson' && state.hearts <= 0) {
       Alert.alert('Out of hearts', `Hearts refill every ${CONFIG.heartsRefillMinutes} minutes.`, [
         { text: 'OK', onPress: () => nav.back() },
       ]);
@@ -190,8 +229,23 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
   }, [mode, phase]);
 
   useEffect(() => {
+    if (phase !== 'items' || mode === 'boss') return;
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt.current) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [phase, mode]);
+
+  useEffect(() => {
+    if (!ghostCpm || phase !== 'items' || done.current) return;
+    const totalMs = (total / ghostCpm) * 60000;
+    const id = setInterval(() => {
+      const frac = Math.max(0, Math.min(1, (Date.now() - startedAt.current) / totalMs));
+      setGhostFrac(frac);
+    }, 250);
+    return () => clearInterval(id);
+  }, [ghostCpm, phase, total]);
+
+  useEffect(() => {
     if (mode !== 'flash' || phase !== 'items' || feedback != null) return;
-    setFlashLeft(CONFIG.flashItemMs);
     const id = setTimeout(() => {
       if (!answered.current) {
         handleAnswer(false, 'Time! 1.5 seconds per item — answer faster.');
@@ -206,11 +260,12 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
     answered.current = true;
     const s = stats.current;
     const now = Date.now();
+    const timeMs = now - s.qStart;
     s.attempts += 1;
-    s.convMs += Math.min(now - s.qStart, 30000);
     if (correct) {
       s.correct += 1;
       s.convCorrect += 1;
+      s.convMs += Math.min(timeMs, 30000);
       s.combo += 1;
       s.maxCombo = Math.max(s.maxCombo, s.combo);
       s.xp += 1;
@@ -226,7 +281,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
       addMiss(itemKey(item));
     }
     setFeedback({ correct, text: explanation });
-    if (!correct) {
+    if (!correct && mode === 'lesson') {
       const left = loseHeart();
       setHearts(left);
       if (left <= 0) setOutOfHearts(true);
@@ -257,8 +312,9 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
   };
 
   const nextIn = Math.max(0, CONFIG.heartsRefillMinutes * 60000 - (Date.now() - state.heartsRefilledAt));
-  const progress = total > 0 ? index / total : 0;
   const reduced = state.settings.reducedMotion;
+  const showTimer = mode === 'boss' || mode === 'flash' || (mode === 'lesson' && !!lesson.scaffold.timer);
+  const ghostAhead = items.length > 0 && index / items.length >= ghostFrac;
 
   if (items.length === 0) {
     return (
@@ -289,13 +345,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
           </Tap>
           <View style={styles.dots}>
             {lesson.theory.map((_, i) => (
-              <Animated.View
-                key={i}
-                style={[
-                  styles.dot,
-                  i === theoryIndex ? styles.dotOn : null,
-                ]}
-              />
+              <View key={i} style={[styles.dot, i === theoryIndex ? styles.dotOn : null]} />
             ))}
           </View>
           <Tap onPress={quit} accessibilityLabel="Quit lesson" style={styles.iconBtn}>
@@ -327,6 +377,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
             onPress={() => {
               if (lastTheory) {
                 setPhase('items');
+                startedAt.current = Date.now();
                 stats.current.qStart = Date.now();
               } else setTheoryIndex(theoryIndex + 1);
             }}
@@ -341,13 +392,12 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
       <View style={styles.topWrap}>
         <View style={styles.top}>
           <Tap onPress={quit} accessibilityLabel="Quit session" style={styles.closeBtn}>
-            <Ionicons name="close" size={24} color={C.ash} />
+            <Ionicons name="close" size={24} color="#b9b9b9" />
           </Tap>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1 }} onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}>
             {mode === 'boss' ? (
-              <View style={styles.bossRow}>
-                <ProgressBar ratio={bossLeft / CONFIG.bossDurationSec} height={14} fill={bossLeft <= 10 ? C.red : C.green} />
-                <Text style={styles.timerText}>{fmtCountdown(bossLeft * 1000)}</Text>
+              <View style={{ height: 16 }}>
+                <ProgressBar ratio={bossLeft / CONFIG.bossDurationSec} height={16} fill={bossLeft <= 10 ? C.red : C.green} />
               </View>
             ) : (
               <View style={styles.segments}>
@@ -356,11 +406,16 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
                 ))}
               </View>
             )}
+            {ghostCpm && barWidth > 0 ? (
+              <View style={[styles.ghost, { left: ghostFrac * barWidth - 9 }]} pointerEvents="none">
+                <MaterialCommunityIcons name="ghost" size={18} color={ghostAhead ? C.greenDark : C.orange} />
+              </View>
+            ) : null}
           </View>
           <Animated.View style={hearts === 0 ? heartBob : undefined}>
             <Tap
               onPress={() => setHeartsModal(true)}
-              accessibilityLabel={`${hearts} hearts. Open refill timer`}
+              accessibilityLabel={`${hearts} of ${CONFIG.heartsMax} hearts. Open the refill timer`}
               style={[styles.heartsChip, hearts === 0 ? styles.heartsLow : null]}
             >
               <Ionicons name={hearts > 0 ? 'heart' : 'heart-outline'} size={16} color={C.red} />
@@ -370,26 +425,39 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
         </View>
 
         <View style={styles.metaRow}>
+          {combo >= 2 ? (
+            <Chip
+              icon="flame"
+              label={`${multiplier % 1 === 0 ? multiplier : multiplier.toFixed(1)}×`}
+              tone="orange"
+            />
+          ) : null}
+          {showTimer ? (
+            <Chip
+              icon="timer"
+              label={mode === 'boss' ? `${bossLeft}s` : fmtCountdown(elapsed * 1000)}
+              tone={mode === 'boss' && bossLeft <= 10 ? 'red' : 'neutral'}
+            />
+          ) : null}
           <Animated.View style={{ transform: [{ scale: xpScale }] }}>
             <Chip icon="sparkles" label={`${xp} XP`} tone="green" />
           </Animated.View>
-          {reduced ? null : <Chip icon="flash" label={`${combo} combo`} tone={combo > 0 ? 'orange' : 'neutral'} />}
-          {mode === 'flash' ? <Chip icon="timer" label="1.5s" tone="red" /> : null}
+          {ghostCpm ? (
+            <View style={styles.ghostPill}>
+              <MaterialCommunityIcons name="ghost" size={13} color={C.gemInk} />
+              <Text style={styles.ghostPillText}>vs you · {ghostCpm.toFixed(1)} CPM</Text>
+            </View>
+          ) : null}
         </View>
       </View>
 
       <Animated.View style={{ flex: 1, transform: [{ scale: feedbackPop }] }}>
         <ScrollView contentContainerStyle={styles.questionBody} keyboardShouldPersistTaps="handled">
+          {mode === 'flash' && !feedback ? <FlashBar key={`${index}-${attemptKey}`} itemKey={`${index}-${attemptKey}`} /> : null}
           {item ? <Question key={`${index}-${attemptKey}`} item={item} onSubmit={handleAnswer} /> : null}
           <View style={{ height: 160 }} />
         </ScrollView>
       </Animated.View>
-
-      {mode === 'flash' && !feedback ? (
-        <View style={styles.flashWrap}>
-          <Chip icon="timer" label="Flash round" tone="orange" />
-        </View>
-      ) : null}
 
       {feedback ? (
         <Feedback
@@ -410,7 +478,8 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
         gems={state.gems}
         nextIn={nextIn}
         onRefill={() => {
-          Alert.alert('Refill hearts', 'Open the gem shop from the top bar to refill.');
+          refillWithGems();
+          setHearts(state.hearts);
         }}
         onOpenShop={() => {
           setHeartsModal(false);
@@ -473,7 +542,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 10,
+    paddingVertical: 10,
     paddingHorizontal: 12,
     borderWidth: 2,
     borderColor: C.swan,
@@ -487,10 +556,21 @@ const styles = StyleSheet.create({
   closeBtn: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
   segments: { flexDirection: 'row', gap: 2, height: 16, borderRadius: R.pill, overflow: 'hidden' },
   segment: { flex: 1, backgroundColor: C.swan, overflow: 'hidden' },
-  segmentNow: { backgroundColor: '#cfcfcf' },
+  segmentNow: { backgroundColor: '#f0f0f0' },
   segmentFill: { height: '100%', backgroundColor: C.green },
-  bossRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  timerText: { fontSize: 13, fontWeight: '700', color: C.graphite, fontVariant: ['tabular-nums'] },
+  ghost: { position: 'absolute', top: -22, width: 20, alignItems: 'center' },
+  ghostPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    height: 28,
+    paddingHorizontal: 10,
+    borderRadius: R.pill,
+    backgroundColor: C.gemBg,
+    borderWidth: 2,
+    borderColor: C.gemLine,
+  },
+  ghostPillText: { fontSize: 12, fontWeight: '700', color: C.gemInk, letterSpacing: 0.3 },
   heartsChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -501,9 +581,10 @@ const styles = StyleSheet.create({
   },
   heartsLow: { backgroundColor: C.heartPale },
   heartsChipText: { fontSize: 16, fontWeight: '700', color: C.red, fontVariant: ['tabular-nums'] },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 10, minHeight: 28 },
-  questionBody: { paddingHorizontal: 16, paddingTop: 18, paddingBottom: 120 },
-  flashWrap: { position: 'absolute', bottom: 20, left: 0, right: 0, alignItems: 'center' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, paddingTop: 10, minHeight: 28 },
+  questionBody: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 120 },
+  flashBar: { height: 6, borderRadius: 3, backgroundColor: C.swan, overflow: 'hidden', marginBottom: 12 },
+  flashFill: { height: 6, borderRadius: 3, backgroundColor: C.orange, width: '100%' },
   feedback: {
     position: 'absolute',
     left: 0,

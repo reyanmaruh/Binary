@@ -1,11 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { CONFIG } from '../data/curriculum';
 import { Press3D, Tap } from '../motion';
 import { C, R, T } from '../theme';
 import type { Lesson } from '../types';
-import { fmtCountdown } from '../utils';
+import { fmtCountdown, pct } from '../utils';
 import { Text } from './Text';
 import { Btn, Chip } from './UI';
 
@@ -212,68 +212,106 @@ export function LessonSheet({
   onClose,
   onStart,
   onPractice,
+  onGhost,
   stars,
   bestCpm,
-  practiceBest,
+  bestAccuracy,
   completed,
+  practicePassed,
+  crown,
 }: {
   lesson: Lesson | null;
   visible: boolean;
   onClose: () => void;
   onStart: () => void;
   onPractice: () => void;
+  onGhost: () => void;
   stars: number;
   bestCpm: number | null;
-  practiceBest: number | null;
+  bestAccuracy: number | null;
   completed: boolean;
+  practicePassed: boolean;
+  crown: boolean;
 }) {
   if (!lesson) return null;
+  const accGate = lesson.passCriteria.accuracy;
+  const cpmGate = lesson.passCriteria.cpm ?? CONFIG.cpm.dec2bin[1];
+
   const missions = [
-    { icon: 'flash' as const, label: 'Answer 5 in a row', hint: 'combo', done: false },
-    { icon: 'speedometer' as const, label: 'Beat 10 CPM', hint: 'speed', done: bestCpm != null && bestCpm >= 10 },
     {
-      icon: 'checkmark-circle' as const,
-      label: `Pass practice ${Math.round(CONFIG.practiceGate * 100)}%`,
-      hint: 'unlock',
-      done: practiceBest != null && practiceBest >= CONFIG.practiceGate,
+      icon: 'locate' as const,
+      label: 'Accuracy',
+      value: pct(accGate, 0),
+      done: (bestAccuracy || 0) >= accGate,
+    },
+    {
+      icon: 'speedometer' as const,
+      label: 'Speed',
+      value: `${cpmGate} CPM`,
+      done: (bestCpm || 0) >= cpmGate,
+    },
+    {
+      icon: 'checkmark' as const,
+      label: 'Practice',
+      value: practicePassed ? 'passed' : 'needed',
+      done: practicePassed,
     },
   ];
+
   return (
     <Sheet visible={visible} onClose={onClose}>
-      <Text style={styles.kicker}>
-        Lesson {lesson.id}
-        {completed ? ' · completed' : ''}
-      </Text>
-      <Text style={styles.lessonTitle}>{lesson.title}</Text>
-      <Text style={styles.sheetSub}>{lesson.subtitle}</Text>
+      <View style={styles.sheetHead}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.kicker}>
+            Lesson {lesson.id}
+            {completed ? ' · completed' : ''}
+          </Text>
+          <Text style={styles.lessonTitle}>{lesson.title}</Text>
+          <Text style={styles.sheetSub}>{lesson.subtitle}</Text>
+        </View>
+        <Tap onPress={onClose} accessibilityLabel="Close lesson sheet" style={styles.sheetClose}>
+          <Ionicons name="close" size={22} color={C.ash} />
+        </Tap>
+      </View>
+
+      {lesson.newConcept ? <Text style={styles.sheetConcept}>{lesson.newConcept}</Text> : null}
+
+      <View style={styles.chipRow}>
+        <Chip icon="star" label={`${stars}/3`} tone="gold" />
+        {crown ? (
+          <View style={styles.crownChip}>
+            <MaterialCommunityIcons name="crown" size={14} color={C.goldDark} />
+          </View>
+        ) : null}
+        <Chip icon="speedometer" label={`Best ${bestCpm == null ? '—' : bestCpm.toFixed(1)} CPM`} />
+        <Chip icon="locate" label={bestAccuracy == null ? '—' : pct(bestAccuracy, 0)} />
+      </View>
 
       <View style={styles.missions}>
         {missions.map((m) => (
           <View key={m.label} style={[styles.mission, m.done ? styles.missionDone : null]}>
             <View style={[styles.missionIco, m.done ? styles.missionIcoDone : null]}>
-              <Ionicons name={m.icon} size={17} color={m.done ? C.greenDark : C.ash} />
+              <Ionicons name={m.done ? 'checkmark' : m.icon} size={17} color={m.done ? C.greenDark : C.ash} />
             </View>
             <Text style={styles.missionLabel}>{m.label}</Text>
-            <Text style={[styles.missionHint, m.done ? { color: C.greenDark } : null]}>{m.hint}</Text>
+            <Text style={[styles.missionHint, m.done ? { color: C.greenDark } : null]}>{m.value}</Text>
           </View>
         ))}
       </View>
 
-      <View style={styles.chipRow}>
-        <Chip icon="star" label={`${stars}/3`} tone="gold" />
-        <Chip icon="speedometer" label={`${bestCpm == null ? '—' : bestCpm.toFixed(1)} CPM`} />
-        <Chip
-          icon="checkmark-circle"
-          label={practiceBest == null ? 'Practice —' : `Practice ${Math.round(practiceBest * 100)}%`}
-          tone={practiceBest != null && practiceBest >= CONFIG.practiceGate ? 'green' : 'neutral'}
-        />
-      </View>
-
-      <Text style={styles.sheetConcept}>{lesson.newConcept}</Text>
-      <View style={{ gap: 10, marginTop: 8 }}>
+      <View style={styles.actions}>
         <Btn label={completed ? 'Replay lesson' : 'Start lesson'} onPress={onStart} />
-        {completed ? <Btn label="Practice" variant="secondary" onPress={onPractice} /> : null}
-        <Btn label="Close" variant="ghost" onPress={onClose} />
+        <Btn
+          label={practicePassed ? 'Practice again · passed' : 'Practice · required'}
+          variant="secondary"
+          onPress={onPractice}
+        />
+        <Btn
+          label={bestCpm == null ? 'Ghost race · set a best first' : 'Ghost race · You vs. You'}
+          variant="neutral"
+          disabled={bestCpm == null}
+          onPress={onGhost}
+        />
       </View>
     </Sheet>
   );
@@ -396,12 +434,33 @@ const styles = StyleSheet.create({
   shopDesc: { fontSize: 12.5, fontWeight: '500', color: C.ash, marginTop: 2 },
   price: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   priceText: { fontSize: 14, fontWeight: '700', color: C.beet, fontVariant: ['tabular-nums'] },
-  kicker: { ...T.label, marginBottom: 4 },
+  sheetHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 6 },
+  sheetClose: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: C.polar,
+    marginTop: -2,
+  },
+  kicker: { fontSize: 12, fontWeight: '500', color: C.ash, marginBottom: 2 },
   lessonTitle: { ...T.h1, fontSize: 24 },
-  sheetSub: { ...T.body, marginTop: 2 },
-  sheetConcept: { ...T.tiny, marginTop: 12, lineHeight: 18 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
-  missions: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  sheetSub: { ...T.body, fontSize: 14, lineHeight: 20, marginTop: 2 },
+  sheetConcept: { ...T.tiny, marginTop: 4, lineHeight: 18 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 14 },
+  crownChip: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: C.amberLine,
+    backgroundColor: C.amberPale,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  missions: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  actions: { gap: 10, marginTop: 16 },
   mission: {
     flex: 1,
     backgroundColor: C.polar,

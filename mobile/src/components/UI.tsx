@@ -5,11 +5,12 @@ import { Press3D, Tap } from '../motion';
 import { C, R, T, card } from '../theme';
 import { Text } from './Text';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Variant = 'primary' | 'secondary' | 'neutral' | 'ghost' | 'danger';
 
 const PALETTE = {
   primary: { bg: C.green, shelf: C.greenDark, fg: C.paper },
   secondary: { bg: C.paper, shelf: C.swan, fg: C.blue },
+  neutral: { bg: C.paper, shelf: C.swan, fg: C.ash },
   ghost: { bg: 'transparent', shelf: 'transparent', fg: C.ash },
   danger: { bg: C.red, shelf: C.redDark, fg: C.paper },
 };
@@ -42,7 +43,7 @@ export function Btn({
       </Tap>
     );
   }
-  const isOutline = variant === 'secondary';
+  const isOutline = variant === 'secondary' || variant === 'neutral';
   const fg = disabled ? C.mute : palette.fg;
   return (
     <Press3D
