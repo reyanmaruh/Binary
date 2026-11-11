@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { ConfirmModal } from '../components/Modals';
 import { Text, TextInput } from '../components/Text';
 import { Btn, Card, PageHead } from '../components/UI';
 import { CONFIG } from '../data/curriculum';
@@ -15,6 +16,7 @@ export function SettingsScreen({ nav }: { nav: Nav }) {
   const [age, setAge] = useState(state.profile.age ? String(state.profile.age) : '');
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const reduced = state.settings.reducedMotion;
 
   const save = () => {
@@ -34,6 +36,7 @@ export function SettingsScreen({ nav }: { nav: Nav }) {
   };
 
   return (
+    <>
     <ScrollView style={{ flex: 1, backgroundColor: C.paper }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <PageHead title="Settings" subtitle="Make it feel right." onBack={() => nav.tab('home')} />
 
@@ -126,27 +129,32 @@ export function SettingsScreen({ nav }: { nav: Nav }) {
             label="Reset progress"
             variant="danger"
             style={{ marginTop: 14 }}
-            onPress={() =>
-              Alert.alert('Reset everything?', 'This wipes all progress on this device. It cannot be undone.', [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Reset',
-                  style: 'destructive',
-                  onPress: () => {
-                    reset();
-                    nav.tab('home');
-                  },
-                },
-              ])
-            }
+            onPress={() => setConfirmReset(true)}
           />
         </Card>
       </FadeIn>
 
       <Text style={styles.footer}>
-        Binary Trainer · offline · no accounts · no leaderboard{'\n'}Everything lives on your device.
+        Binary Trainer · offline · no accounts · no leaderboard{'\n'}        Everything lives on your device.
       </Text>
     </ScrollView>
+    <ConfirmModal
+      visible={confirmReset}
+      title="Reset everything?"
+      body="This wipes all progress on this device. It cannot be undone."
+      icon="warning-outline"
+      confirmLabel="Reset"
+      cancelLabel="Cancel"
+      destructive
+      onConfirm={() => {
+        setConfirmReset(false);
+        reset();
+        nav.tab('home');
+      }}
+      onCancel={() => setConfirmReset(false)}
+      onClose={() => setConfirmReset(false)}
+    />
+    </>
   );
 }
 

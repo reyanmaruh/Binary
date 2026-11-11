@@ -376,6 +376,76 @@ export function InfoModal({
   );
 }
 
+/**
+ * In-app confirmation dialog. Replaces the platform Alert so quitting a
+ * lesson, leaving practice and resetting progress all look like the rest of
+ * the app.
+ */
+export function ConfirmModal({
+  visible,
+  title,
+  body,
+  icon = 'help-circle-outline',
+  confirmLabel,
+  cancelLabel = 'Cancel',
+  destructive,
+  onConfirm,
+  onCancel,
+  onClose,
+}: {
+  visible: boolean;
+  title: string;
+  body: string;
+  icon?: keyof typeof Ionicons.glyphMap;
+  confirmLabel: string;
+  cancelLabel?: string;
+  destructive?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  onClose: () => void;
+}) {
+  const [rendered, setRendered] = useState(visible);
+  const fade = useRef(new Animated.Value(0)).current;
+  const pop = useRef(new Animated.Value(0.9)).current;
+
+  useEffect(() => {
+    if (visible) {
+      setRendered(true);
+      Animated.parallel([
+        Animated.timing(fade, { toValue: 1, duration: 180, useNativeDriver: true }),
+        Animated.spring(pop, { toValue: 1, useNativeDriver: true, friction: 7, tension: 120 }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(fade, { toValue: 0, duration: 150, useNativeDriver: true }),
+        Animated.timing(pop, { toValue: 0.94, duration: 150, useNativeDriver: true }),
+      ]).start(({ finished }) => finished && setRendered(false));
+    }
+  }, [visible, fade, pop]);
+
+  if (!rendered) return null;
+  return (
+    <Modal visible transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
+      <View style={styles.centerFill}>
+        <Animated.View style={[styles.backdrop, { opacity: fade }]}>
+          <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityLabel="Close" />
+        </Animated.View>
+        <Animated.View style={[styles.dialog, { opacity: fade, transform: [{ scale: pop }] }]}>
+          <View style={[styles.dialogIcon, destructive ? styles.dialogIconDanger : null]}>
+            <Ionicons name={icon} size={30} color={destructive ? C.redDark : C.greenDark} />
+          </View>
+          <Text style={styles.dialogTitle}>{title}</Text>
+          <Text style={styles.dialogBody}>{body}</Text>
+          <View style={{ gap: 10, width: '100%' }}>
+            <Btn label={confirmLabel} variant={destructive ? 'danger' : 'primary'} onPress={onConfirm} />
+            <Btn label={cancelLabel} variant="secondary" onPress={onCancel} />
+          </View>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   fill: { flex: 1, justifyContent: 'flex-end' },
   centerFill: { flex: 1, justifyContent: 'center', paddingHorizontal: 20 },
@@ -512,4 +582,5 @@ const styles = StyleSheet.create({
   },
   dialogTitle: { ...T.h2, textAlign: 'center' },
   dialogBody: { ...T.body, textAlign: 'center', marginBottom: 16 },
+  dialogIconDanger: { backgroundColor: C.heartPale },
 });

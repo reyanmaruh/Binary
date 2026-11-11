@@ -45,8 +45,15 @@ npx eas build --platform android
 - Visual parity: the web palette, Space Grotesk (via `@expo-google-fonts`), 3D
   shelf buttons, and the CSS motion ported to the Animated API (screen entrances,
   bit flips, keypad pops, sheet/feedback springs, star and gem pops, mascot float).
+- Theory pages render the reference's animated widgets — toggling bulbs, the
+doubling table, the 16-nibble grid, byte split, division walk, lane race,
+stopwatch, checklist and chart — instead of a static illustration.
+- Every exercise's primary action is pinned to a bottom footer, so Check never
+scrolls out of reach (or hides under the keyboard).
+- Quit, out-of-hearts and reset confirmations use the app's own dialogs; no platform
+Alert popups remain.
 - Persistence through AsyncStorage — the whole store is one JSON blob under
-  `binary-trainer/v1`.
+  `binaryTrainer.mobile.v1`.
 
 ## Layout
 
@@ -65,7 +72,6 @@ src/components/Text.tsx maps fontWeight onto Space Grotesk faces
 
 - Sound effects are not implemented (no WebAudio); haptics are used on answers instead.
 - The ghost-race overlay on results was dropped.
-- Theory illustrations render as their text/description panel rather than SVG art.
 - The path's hover tooltips and the web's canvas confetti do not carry over; native
   press feedback and haptics stand in for them.
 - `index.html` at the repo root is untouched and still works on its own.

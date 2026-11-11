@@ -4,9 +4,10 @@ import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { Press3D, Tap, useBump, useMount, usePop } from '../motion';
 import { C, MONO, R, T } from '../theme';
 import type { Item } from '../types';
-import { BITS, binToDec, shuffle, toBin } from '../utils';
+import { BITS, binToDec, greedyText, shuffle, toBin } from '../utils';
 import { Text, TextInput } from './Text';
-import { Btn, Chip } from './UI';
+import { Btn } from './UI';
+import { useStickyAction } from './QuestionActions';
 
 interface Props {
   item: Item;
@@ -35,12 +36,14 @@ function BitCell({
   on,
   onPress,
   wrong,
+  dimPlace,
 }: {
   place: number;
   bit: string;
   on: boolean;
   onPress: () => void;
   wrong?: boolean;
+  dimPlace?: boolean;
 }) {
   const bounce = useRef(new Animated.Value(1)).current;
   const previous = useRef(on);
@@ -56,7 +59,7 @@ function BitCell({
 
   return (
     <View style={styles.bitCell}>
-      <Text style={[styles.place, on ? { color: C.greenDark, transform: [{ translateY: -1 }] } : null]}>{place}</Text>
+      <Text style={[styles.place, on ? { color: C.greenDark, transform: [{ translateY: -1 }] } : null, dimPlace ? { opacity: 0.22 } : null]}>{place}</Text>
       <Press3D
         onPress={onPress}
         bg={on ? C.green : C.paper}
@@ -86,13 +89,22 @@ function BitCell({
 function TapQuestion({ item, onSubmit }: { item: Item; onSubmit: Props['onSubmit'] }) {
   const target = item.value ?? 0;
   const [on, setOn] = useState<boolean[]>(Array(8).fill(false));
+  const [showPlaces, setShowPlaces] = useState(item.showChart !== false);
+  const [hint, setHint] = useState('');
   const sum = on.reduce((acc, v, i) => acc + (v ? BITS[i] : 0), 0);
   const sumScale = useBump(sum, 1.14);
   const targetAnim = usePop(target);
+
+  useStickyAction({
+    label: 'Check',
+    onPress: () => onSubmit(sum === target, `${target} = ${toBin(target).split('').join(' ')}`),
+  });
+
   return (
     <View style={styles.wrap}>
-      <Kicker text="Build the number" />
+      <Kicker text="Decimal → Binary" />
       <Animated.Text style={[styles.target, targetAnim]}>Make {target}</Animated.Text>
+      <Text style={styles.sub}>Flip the switches so they add up to {target}.</Text>
       <View style={styles.bits}>
         {BITS.map((bit, i) => (
           <BitCell
@@ -100,6 +112,7 @@ function TapQuestion({ item, onSubmit }: { item: Item; onSubmit: Props['onSubmit
             place={bit}
             bit={on[i] ? '1' : '0'}
             on={on[i]}
+            dimPlace={!showPlaces}
             onPress={() => setOn((prev) => prev.map((v, j) => (j === i ? !v : v)))}
           />
         ))}
@@ -109,7 +122,16 @@ function TapQuestion({ item, onSubmit }: { item: Item; onSubmit: Props['onSubmit
         <Animated.Text style={[styles.sumValue, { transform: [{ scale: sumScale }] }]}>{sum}</Animated.Text>
         <Text style={styles.sumOf}>/ {target}</Text>
       </View>
-      <Btn label="Check" onPress={() => onSubmit(sum === target, `${target} = ${toBin(target).split('').join(' ')}`)} />
+      {item.showChart === false && !showPlaces ? (
+        <Btn label="Peek at the chart (once)" icon="eye-outline" variant="ghost" small onPress={() => setShowPlaces(true)} />
+      ) : null}
+      {item.showHints ? (
+        hint ? (
+          <Text style={styles.hint}>{hint}</Text>
+        ) : (
+          <Btn label="Hint: greedy walk" icon="bulb-outline" variant="ghost" small onPress={() => setHint(greedyText(target))} />
+        )
+      ) : null}
     </View>
   );
 }
@@ -133,6 +155,8 @@ function NumQuestion({ item, onSubmit }: { item: Item; onSubmit: Props['onSubmit
 
   const type = (d: string) => setDigits((prev) => (prev.length >= expected.length ? prev : prev + d));
 
+  useStickyAction(bin2dec ? null : { label: 'Check', disabled: !digits, onPress: submit });
+
   return (
     <View style={styles.wrap}>
       <Kicker text={bin2dec ? 'Binary → decimal' : 'Decimal → binary'} />
@@ -141,6 +165,7 @@ function NumQuestion({ item, onSubmit }: { item: Item; onSubmit: Props['onSubmit
       ) : (
         <Animated.Text style={[styles.targetNumber, targetAnim]}>{item.value}</Animated.Text>
       )}
+      {item.showChart ? <BitChart bits={item.bits || ''} /> : null}
 
       <View style={styles.numDisplay}>
         {digits.split('').map((d, i) => (
@@ -157,13 +182,6 @@ function NumQuestion({ item, onSubmit }: { item: Item; onSubmit: Props['onSubmit
         ))}
         <Key icon="backspace-outline" label="Delete" onPress={() => setDigits((prev) => prev.slice(0, -1))} />
         <Key label="0" onPress={() => type('0')} />
-        <Key
-          icon="checkmark"
-          label="Check"
-          enter
-          disabled={!digits}
-          onPress={submit}
-        />
       </View>
     </View>
   );
@@ -215,6 +233,16 @@ function Key({
 function McqQuestion({ item, onSubmit }: { item: Item; onSubmit: Props['onSubmit'] }) {
   const [selected, setSelected] = useState<number | null>(null);
   const answer = Number(item.answer);
+  const check = () =>
+    onSubmit(
+      selected === answer,
+      selected === answer
+        ? `Yes — ${(item.options || [])[answer]}.`
+        : `Correct answer: ${(item.options || [])[answer]}`,
+    );
+
+  useStickyAction({ label: 'Check', disabled: selected == null, onPress: check });
+
   return (
     <View style={styles.wrap}>
       <Kicker text="Question" />
@@ -244,18 +272,6 @@ function McqQuestion({ item, onSubmit }: { item: Item; onSubmit: Props['onSubmit
           );
         })}
       </View>
-      <Btn
-        label="Check"
-        disabled={selected == null}
-        onPress={() =>
-          onSubmit(
-            selected === answer,
-            selected === answer
-              ? `Yes — ${(item.options || [])[answer]}.`
-              : `Correct answer: ${(item.options || [])[answer]}`,
-          )
-        }
-      />
     </View>
   );
 }
@@ -400,6 +416,13 @@ function BlankQuestion({ item, onSubmit }: { item: Item; onSubmit: Props['onSubm
   const [value, setValue] = useState('');
   const known = (item.known || '').split('');
   const answerStart = known.filter((c) => c !== '_').length;
+
+  useStickyAction({
+    label: 'Check',
+    disabled: value.length !== answer.length,
+    onPress: () => onSubmit(value === answer, `${item.value} = ${(item.known || '').replace(/_/g, '')}${answer}`),
+  });
+
   return (
     <View style={styles.wrap}>
       <Kicker text="Fill the gap" />
@@ -426,24 +449,54 @@ function BlankQuestion({ item, onSubmit }: { item: Item; onSubmit: Props['onSubm
         maxLength={answer.length}
         autoFocus
       />
-      <Btn
-        label="Check"
-        disabled={value.length !== answer.length}
-        onPress={() => onSubmit(value === answer, `${item.value} = ${(item.known || '').replace(/_/g, '')}${answer}`)}
-      />
+    </View>
+  );
+}
+
+/** The eight place-value cells, used by bin → dec and the theory chart. */
+export function BitChart({ bits }: { bits: string }) {
+  return (
+    <View style={styles.chartRow}>
+      {BITS.map((place, i) => {
+        const bit = bits[i] ?? '0';
+        const lit = bit === '1';
+        return (
+          <View key={place} style={styles.chartCell}>
+            <View style={[styles.chartBit, lit ? styles.chartBitLit : null]}>
+              <Text style={[styles.chartBitText, lit ? { color: C.paper } : null]}>{bit}</Text>
+            </View>
+            <Text style={styles.chartPlace}>{place}</Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { gap: 18, width: '100%', alignItems: 'center' },
+  sub: { fontSize: 14, fontWeight: '500', color: C.ash, textAlign: 'center', lineHeight: 20, marginTop: -6 },
+  hint: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: C.ash,
+    textAlign: 'center',
+    lineHeight: 19,
+    backgroundColor: C.polar,
+    borderWidth: 2,
+    borderColor: C.swan,
+    borderRadius: R.md,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    width: '100%',
+  },
   kicker: { ...T.label, color: C.blue, letterSpacing: 1.1, fontSize: 12 },
   prompt: { ...T.h2, fontSize: 22, textAlign: 'center', lineHeight: 29 },
   target: { ...T.h2, fontSize: 24, textAlign: 'center' },
   targetNumber: { fontSize: 58, fontWeight: '700', letterSpacing: -1.5, color: C.graphite, lineHeight: 62 },
   bitsBig: { fontSize: 28, fontWeight: '700', letterSpacing: 3, color: C.graphite, fontFamily: MONO },
-  bits: { flexDirection: 'row', gap: 5, width: '100%', justifyContent: 'center' },
-  bitCell: { flex: 1, maxWidth: 46, alignItems: 'center', gap: 6 },
+  bits: { flexDirection: 'row', gap: 4, width: '100%', justifyContent: 'center', marginTop: 2 },
+  bitCell: { flex: 1, minWidth: 0, maxWidth: 46, alignItems: 'center', gap: 6 },
   place: { fontSize: 10, fontWeight: '700', color: C.ash },
   bitFace: {
     height: 58,
@@ -461,6 +514,21 @@ const styles = StyleSheet.create({
   sumValue: { fontSize: 18, fontWeight: '700', color: C.graphite, fontVariant: ['tabular-nums'] },
   sumOf: { ...T.tiny },
   numDisplay: { flexDirection: 'row', gap: 6, justifyContent: 'center', minHeight: 58, alignItems: 'center', flexWrap: 'wrap' },
+  chartRow: { flexDirection: 'row', gap: 5, width: '100%', justifyContent: 'center', marginTop: 2 },
+  chartCell: { flex: 1, minWidth: 0, maxWidth: 38, alignItems: 'center', gap: 4 },
+  chartBit: {
+    width: '100%',
+    height: 34,
+    borderRadius: R.sm,
+    backgroundColor: C.paper,
+    borderWidth: 2,
+    borderColor: C.swan,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chartBitLit: { backgroundColor: C.green, borderColor: C.greenDark },
+  chartBitText: { fontSize: 13, fontWeight: '700', color: C.ash, fontFamily: MONO },
+  chartPlace: { fontSize: 9, fontWeight: '700', color: C.ash },
   digit: {
     minWidth: 42,
     height: 56,

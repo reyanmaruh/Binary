@@ -35,6 +35,20 @@ export function binToDec(bits: string): number {
   return v;
 }
 
+export function greedyText(n: number): string {
+  let r = n;
+  const steps = BITS.map((v) => {
+    if (v <= r) {
+      const next = r - v;
+      const step = `${v} fits → remainder ${next}`;
+      r = next;
+      return step;
+    }
+    return `${v} doesn't fit`;
+  });
+  return steps.join('. ') + `. Answer: ${toBin(n).split('').join(' ')} (${n}).`;
+}
+
 export function fmtCpm(v: number | null | undefined): string {
   if (v == null) return '—';
   return (Math.round(v * 10) / 10).toFixed(1);

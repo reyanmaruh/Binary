@@ -9,6 +9,9 @@ import { xpProgress } from '../utils';
 import { HeartsModal, ShopModal } from './Modals';
 import { Text } from './Text';
 
+/** Fixed row height — never let the tiles stretch to the screen. */
+const HUD_HEIGHT = 54;
+
 /**
  * The sticky header: one wide XP tile that carries the level badge and the
  * level bar, plus compact gem and heart tiles. Everything is a single row of
@@ -114,7 +117,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     elevation: 6,
   },
-  xpWrap: { flex: 1, minWidth: 0 },
+  xpWrap: { flex: 1, minWidth: 0, height: HUD_HEIGHT },
   xpTile: {
     flex: 1,
     backgroundColor: C.eelLight,
@@ -151,7 +154,7 @@ const styles = StyleSheet.create({
   xpTrack: { height: 6, borderRadius: 3, backgroundColor: 'rgba(88,204,2,0.16)', overflow: 'hidden' },
   xpFill: { height: 6, borderRadius: 3, backgroundColor: C.green },
   tile: {
-    height: '100%',
+    height: HUD_HEIGHT,
     minWidth: 58,
     borderRadius: 16,
     backgroundColor: C.polar,

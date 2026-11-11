@@ -1,7 +1,9 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Easing, ScrollView, StyleSheet, View } from 'react-native';
-import { HeartsModal } from '../components/Modals';
+import { Animated, Easing, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { ConfirmModal, HeartsModal, InfoModal } from '../components/Modals';
+import { StickyActionProvider, type StickyAction } from '../components/QuestionActions';
+import { TheoryVisual } from '../components/TheoryVisual';
 import { Text } from '../components/Text';
 import { Btn, Chip, ProgressBar } from '../components/UI';
 import { CONFIG, LESSONS } from '../data/curriculum';
@@ -156,6 +158,9 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
   const [combo, setCombo] = useState(0);
   const [barWidth, setBarWidth] = useState(0);
   const [ghostFrac, setGhostFrac] = useState(0);
+  const [stickyAction, setStickyAction] = useState<StickyAction | null>(null);
+  const [quitAsk, setQuitAsk] = useState(false);
+  const [heartBlocked, setHeartBlocked] = useState(mode === 'lesson' && state.hearts <= 0);
 
   const answered = useRef(false);
   const done = useRef(false);
@@ -203,15 +208,6 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
 
   const finishRef = useRef(finish);
   finishRef.current = finish;
-
-  useEffect(() => {
-    if (mode === 'lesson' && state.hearts <= 0) {
-      Alert.alert('Out of hearts', `Hearts refill every ${CONFIG.heartsRefillMinutes} minutes.`, [
-        { text: 'OK', onPress: () => nav.back() },
-      ]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     if (mode !== 'boss' || phase !== 'items' || done.current) return;
@@ -304,12 +300,14 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
     setAttemptKey((k) => k + 1);
   };
 
-  const quit = () => {
-    Alert.alert('Leave lesson?', 'Your progress in this session will be lost.', [
-      { text: 'Stay', style: 'cancel' },
-      { text: 'Leave', style: 'destructive', onPress: () => nav.back() },
-    ]);
-  };
+  const quit = () => setQuitAsk(true);
+
+  const quitTitle =
+    mode === 'lesson' ? 'Leave lesson?' : mode === 'practice' ? 'Leave practice?' : mode === 'ghost' ? 'Leave ghost race?' : 'Leave session?';
+  const quitBody =
+    mode === 'practice'
+      ? 'Your progress in this practice run will be lost. Hearts are safe — practice never costs them.'
+      : 'Your progress in this session will be lost. Hearts already spent stay spent.';
 
   const nextIn = Math.max(0, CONFIG.heartsRefillMinutes * 60000 - (Date.now() - state.heartsRefilledAt));
   const reduced = state.settings.reducedMotion;
@@ -334,6 +332,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
     const t = lesson.theory[theoryIndex];
     const lastTheory = theoryIndex === lesson.theory.length - 1;
     return (
+      <>
       <View style={{ flex: 1, backgroundColor: C.paper }}>
         <View style={styles.theoryTop}>
           <Tap
@@ -361,8 +360,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
               <Text style={styles.theoryTitle}>{t.heading}</Text>
               <Text style={styles.theoryBodyText}>{t.body}</Text>
               <View style={styles.visual}>
-                <Ionicons name="bulb" size={26} color={C.greenDark} />
-                <Text style={styles.visualText}>{t.visual}</Text>
+                <TheoryVisual hint={t.visual} reduced={reduced} />
               </View>
               <View style={styles.takeaway}>
                 <Ionicons name="bulb" size={15} color={C.greenDark} />
@@ -384,11 +382,30 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
           />
         </View>
       </View>
+      <ConfirmModal
+        visible={quitAsk}
+        title={quitTitle}
+        body={quitBody}
+        icon="exit-outline"
+        confirmLabel="Leave"
+        cancelLabel="Stay"
+        destructive
+        onConfirm={() => {
+          setQuitAsk(false);
+          nav.back();
+        }}
+        onCancel={() => setQuitAsk(false)}
+        onClose={() => setQuitAsk(false)}
+      />
+      </>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: C.paper }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: C.paper }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <View style={styles.topWrap}>
         <View style={styles.top}>
           <Tap onPress={quit} accessibilityLabel="Quit session" style={styles.closeBtn}>
@@ -454,10 +471,18 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
       <Animated.View style={{ flex: 1, transform: [{ scale: feedbackPop }] }}>
         <ScrollView contentContainerStyle={styles.questionBody} keyboardShouldPersistTaps="handled">
           {mode === 'flash' && !feedback ? <FlashBar key={`${index}-${attemptKey}`} itemKey={`${index}-${attemptKey}`} /> : null}
-          {item ? <Question key={`${index}-${attemptKey}`} item={item} onSubmit={handleAnswer} /> : null}
-          <View style={{ height: 160 }} />
+          <StickyActionProvider setAction={setStickyAction}>
+            {item ? <Question key={`${index}-${attemptKey}`} item={item} onSubmit={handleAnswer} /> : null}
+          </StickyActionProvider>
+          <View style={{ height: 32 }} />
         </ScrollView>
       </Animated.View>
+
+      {!feedback && stickyAction ? (
+        <View style={styles.stickyFoot}>
+          <Btn label={stickyAction.label} disabled={stickyAction.disabled} onPress={stickyAction.onPress} />
+        </View>
+      ) : null}
 
       {feedback ? (
         <Feedback
@@ -486,7 +511,39 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
           nav.tab('home');
         }}
       />
-    </View>
+
+      <ConfirmModal
+        visible={quitAsk}
+        title={quitTitle}
+        body={quitBody}
+        icon="exit-outline"
+        confirmLabel="Leave"
+        cancelLabel="Stay"
+        destructive
+        onConfirm={() => {
+          setQuitAsk(false);
+          nav.back();
+        }}
+        onCancel={() => setQuitAsk(false)}
+        onClose={() => setQuitAsk(false)}
+      />
+
+      <InfoModal
+        visible={heartBlocked}
+        title="Out of hearts"
+        body={`Hearts refill every ${CONFIG.heartsRefillMinutes} minutes. Refill with gems now, or practice without spending hearts.`}
+        icon="heart-dislike-outline"
+        primaryLabel="Refill hearts"
+        onPrimary={() => {
+          setHeartBlocked(false);
+          setHeartsModal(true);
+        }}
+        onClose={() => {
+          setHeartBlocked(false);
+          nav.back();
+        }}
+      />
+    </KeyboardAvoidingView>
   );
 }
 
@@ -582,7 +639,15 @@ const styles = StyleSheet.create({
   heartsLow: { backgroundColor: C.heartPale },
   heartsChipText: { fontSize: 16, fontWeight: '700', color: C.red, fontVariant: ['tabular-nums'] },
   metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, paddingTop: 10, minHeight: 28 },
-  questionBody: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 120 },
+  questionBody: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 },
+  stickyFoot: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    backgroundColor: C.paper,
+    borderTopWidth: 2,
+    borderTopColor: C.swan,
+  },
   flashBar: { height: 6, borderRadius: 3, backgroundColor: C.swan, overflow: 'hidden', marginBottom: 12 },
   flashFill: { height: 6, borderRadius: 3, backgroundColor: C.orange, width: '100%' },
   feedback: {
