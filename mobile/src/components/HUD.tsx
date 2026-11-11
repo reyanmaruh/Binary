@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { playSound } from '../audio';
 import { CONFIG } from '../data/curriculum';
 import { useBump, useFloat } from '../motion';
 import { useStore } from '../store';
@@ -55,7 +56,10 @@ export function HUD({ onStats }: { onStats: () => void }) {
         <Animated.View style={{ transform: [{ scale: gemScale }] }}>
           <Pressable
             style={({ pressed }) => [styles.tile, pressed ? styles.pressed : null]}
-            onPress={() => setModal('shop')}
+            onPress={() => {
+              playSound('buttonPress');
+              setModal('shop');
+            }}
             accessibilityRole="button"
             accessibilityLabel={`${state.gems} gems. Open the gem shop`}
           >
@@ -67,7 +71,10 @@ export function HUD({ onStats }: { onStats: () => void }) {
         <Animated.View style={lowHeart ? heartPulse : undefined}>
           <Pressable
             style={({ pressed }) => [styles.tile, lowHeart ? styles.heartOut : null, pressed ? styles.pressed : null]}
-            onPress={() => setModal('hearts')}
+            onPress={() => {
+              playSound('buttonPress');
+              setModal('hearts');
+            }}
             accessibilityRole="button"
             accessibilityLabel={`${state.hearts} of ${CONFIG.heartsMax} hearts. Open the refill timer`}
           >
@@ -83,8 +90,13 @@ export function HUD({ onStats }: { onStats: () => void }) {
         hearts={state.hearts}
         gems={state.gems}
         nextIn={nextIn}
-        onRefill={() => refillWithGems()}
-        onOpenShop={() => setModal('shop')}
+        onRefill={() => {
+          playSound(refillWithGems() ? 'levelUp' : 'wrong');
+        }}
+        onOpenShop={() => {
+          playSound('buttonPress');
+          setModal('shop');
+        }}
       />
       <ShopModal
         visible={modal === 'shop'}
@@ -92,8 +104,8 @@ export function HUD({ onStats }: { onStats: () => void }) {
         gems={state.gems}
         hearts={state.hearts}
         onBuy={(kind) => {
-          if (kind === 'full') refillWithGems();
-          else buyOneHeart();
+          const ok = kind === 'full' ? refillWithGems() : buyOneHeart();
+          playSound(ok ? 'levelUp' : 'wrong');
         }}
       />
     </>

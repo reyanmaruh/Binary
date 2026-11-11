@@ -3,17 +3,9 @@ import { SpaceGrotesk_400Regular, SpaceGrotesk_500Medium, SpaceGrotesk_600SemiBo
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Animated,
-  Easing,
-  Platform,
-  Pressable,
-  SafeAreaView,
-  StatusBar as RNStatusBar,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { setSoundEnabled } from './src/audio';
 import type { Nav, Route, TabName } from './src/navigation';
 import { OnboardingScreen } from './src/screens/Onboarding';
 import { HomeScreen } from './src/screens/Home';
@@ -60,8 +52,9 @@ function Scene({ routeKey, children }: { routeKey: string; children: React.React
 }
 
 function TabBar({ current, nav }: { current: Route; nav: Nav }) {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.tabbar}>
+    <View style={[styles.tabbar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
       {TABS.map((t) => {
         const active = current.name === t.name;
         return (
@@ -110,6 +103,10 @@ function TabButton({
 function Root() {
   const { state, ready } = useStore();
   const [stack, setStack] = useState<Route[]>([{ name: 'home' }]);
+
+  useEffect(() => {
+    setSoundEnabled(state.settings.sound);
+  }, [state.settings.sound]);
 
   const nav: Nav = {
     go: (name, params) => setStack((s) => [...s, { name, params }]),
@@ -161,7 +158,6 @@ function Root() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.paper }}>
-      {Platform.OS === 'android' ? <View style={{ height: RNStatusBar.currentHeight || 0 }} /> : null}
       <View style={{ flex: 1 }}>
         <Scene routeKey={`${current.name}-${stack.length}`}>{screen}</Scene>
       </View>
@@ -179,12 +175,14 @@ export default function App() {
   });
 
   return (
-    <StoreProvider>
-      <StatusBar style="dark" />
-      <SafeAreaView style={styles.root}>
-        {loaded ? <Root /> : <View style={styles.loading} />}
-      </SafeAreaView>
-    </StoreProvider>
+    <SafeAreaProvider>
+      <StoreProvider>
+        <StatusBar style="dark" />
+        <SafeAreaView style={styles.root} edges={['top']}>
+          {loaded ? <Root /> : <View style={styles.loading} />}
+        </SafeAreaView>
+      </StoreProvider>
+    </SafeAreaProvider>
   );
 }
 
@@ -198,7 +196,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     flexDirection: 'row',
     paddingTop: 8,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
     paddingHorizontal: 6,
     backgroundColor: C.paper,
     borderTopWidth: 2,

@@ -84,7 +84,7 @@ export interface AppState {
   heartsRefilledAt: number;
   lessons: Record<string, LessonState>;
   srs: Record<string, { errorCount: number }>;
-  settings: { haptics: boolean; reducedMotion: boolean };
+  settings: { sound: boolean; haptics: boolean; reducedMotion: boolean };
   stats: { conversions: number; correct: number; attempts: number; sessions: number };
   history: HistoryEntry[];
   profile: Profile;
@@ -102,6 +102,7 @@ export interface SessionInput {
   convMs: number;
   combo: number;
   answerXp: number;
+  ghostCpm?: number | null;
   failed?: boolean;
 }
 
@@ -124,4 +125,5 @@ export interface SessionResult {
   nextLessonId: string | null;
   bossCorrect: number;
   bestCombo: number;
+  ghostCpm: number | null;
 }

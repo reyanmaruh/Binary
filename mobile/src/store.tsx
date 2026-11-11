@@ -14,7 +14,7 @@ export function defaultState(): AppState {
     heartsRefilledAt: Date.now(),
     lessons: {},
     srs: {},
-    settings: { haptics: true, reducedMotion: false },
+    settings: { sound: true, haptics: true, reducedMotion: false },
     stats: { conversions: 0, correct: 0, attempts: 0, sessions: 0 },
     history: [],
     profile: { name: '', age: null, onboarded: false },
@@ -52,7 +52,7 @@ interface Store {
   refillHeartsFree: () => void;
   buyOneHeart: () => boolean;
   addMiss: (key: string) => void;
-  toggleSetting: (key: 'haptics' | 'reducedMotion') => void;
+  toggleSetting: (key: 'sound' | 'haptics' | 'reducedMotion') => void;
   reset: () => void;
 }
 
@@ -153,7 +153,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const toggleSetting = useCallback((key: 'haptics' | 'reducedMotion') => {
+  const toggleSetting = useCallback((key: 'sound' | 'haptics' | 'reducedMotion') => {
     setState((s) => ({ ...s, settings: { ...s.settings, [key]: !s.settings[key] } }));
   }, []);
 
@@ -285,6 +285,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         nextLessonId: idx >= 0 && idx < LESSONS.length - 1 ? LESSONS[idx + 1].id : null,
         bossCorrect: input.correct,
         bestCombo: input.combo,
+        ghostCpm: input.ghostCpm ?? null,
       };
     },
     [state],

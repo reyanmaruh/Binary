@@ -1,7 +1,9 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { ConfirmModal, HeartsModal, InfoModal } from '../components/Modals';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { playSound } from '../audio';
+import { ConfirmModal, HeartsModal, InfoModal, ShopModal } from '../components/Modals';
 import { StickyActionProvider, type StickyAction } from '../components/QuestionActions';
 import { TheoryVisual } from '../components/TheoryVisual';
 import { Text } from '../components/Text';
@@ -96,6 +98,7 @@ function Feedback({
   xp,
   label,
   onNext,
+  bottomInset = 0,
 }: {
   correct: boolean;
   title: string;
@@ -103,6 +106,7 @@ function Feedback({
   xp: number;
   label: string;
   onNext: () => void;
+  bottomInset?: number;
 }) {
   const rise = useRef(new Animated.Value(1)).current;
   const xpScale = usePop(`${xp}-${title}`, 0.6);
@@ -114,6 +118,7 @@ function Feedback({
       style={[
         styles.feedback,
         correct ? styles.feedbackGood : styles.feedbackBad,
+        { paddingBottom: 28 + Math.max(bottomInset, 0) },
         { transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [0, 420] }) }] },
       ]}
     >
@@ -138,7 +143,8 @@ function Feedback({
 }
 
 export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
-  const { state, finishSession, loseHeart, addMiss, refillWithGems } = useStore();
+  const { state, finishSession, loseHeart, addMiss, refillWithGems, buyOneHeart } = useStore();
+  const insets = useSafeAreaInsets();
   const lesson = LESSONS.find((l) => l.id === params.lessonId) || LESSONS[0];
   const mode = params.mode;
   const [items] = useState<Item[]>(() => buildItems(lesson, mode, state));
@@ -153,6 +159,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
   const [hearts, setHearts] = useState(state.hearts);
   const [xp, setXp] = useState(0);
   const [heartsModal, setHeartsModal] = useState(false);
+  const [shopModal, setShopModal] = useState(false);
   const [bossLeft, setBossLeft] = useState<number>(CONFIG.bossDurationSec);
   const [elapsed, setElapsed] = useState(0);
   const [combo, setCombo] = useState(0);
@@ -201,6 +208,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
       convMs: s.convMs,
       combo: s.maxCombo,
       answerXp: s.xp,
+      ghostCpm: mode === 'ghost' ? ghostCpm : null,
       failed,
     });
     nav.replace('results', res);
@@ -208,6 +216,14 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
 
   const finishRef = useRef(finish);
   finishRef.current = finish;
+
+  useEffect(() => {
+    if (mode === 'boss' && phase === 'items') playSound('bossStart');
+  }, [mode, phase]);
+
+  useEffect(() => {
+    if (mode === 'boss' && phase === 'items' && bossLeft > 0 && bossLeft <= 10) playSound('bossTick');
+  }, [bossLeft, mode, phase]);
 
   useEffect(() => {
     if (mode !== 'boss' || phase !== 'items' || done.current) return;
@@ -267,6 +283,9 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
       s.xp += 1;
       setXp(s.xp);
       setCombo(s.combo);
+      playSound('correct');
+      if (s.combo >= 2) playSound('comboUp');
+      if (s.combo === 4) playSound('streakMilestone');
       Animated.sequence([
         Animated.timing(feedbackPop, { toValue: 1.02, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
         Animated.spring(feedbackPop, { toValue: 1, useNativeDriver: true, friction: 5, tension: 160 }),
@@ -275,11 +294,13 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
       s.combo = 0;
       setCombo(0);
       addMiss(itemKey(item));
+      playSound('wrong');
     }
     setFeedback({ correct, text: explanation });
     if (!correct && mode === 'lesson') {
       const left = loseHeart();
       setHearts(left);
+      playSound('heartLoss');
       if (left <= 0) setOutOfHearts(true);
     }
   };
@@ -351,7 +372,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
             <Ionicons name="close" size={22} color={C.ash} />
           </Tap>
         </View>
-        <ScrollView contentContainerStyle={styles.theoryBody}>
+        <ScrollView contentContainerStyle={[styles.theoryBody, { paddingBottom: 40 + Math.max(insets.bottom, 0) }]}>
           <FadeIn key={`${theoryIndex}`} from={12} enabled={!reduced}>
             <View style={styles.theoryCard}>
               <Text style={styles.theoryKicker}>
@@ -369,7 +390,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
             </View>
           </FadeIn>
         </ScrollView>
-        <View style={styles.foot}>
+        <View style={[styles.foot, { paddingBottom: 16 + Math.max(insets.bottom, 8) }]}>
           <Btn
             label={lastTheory ? 'Start questions' : 'Continue'}
             onPress={() => {
@@ -404,7 +425,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: C.paper }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.topWrap}>
         <View style={styles.top}>
@@ -479,7 +500,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
       </Animated.View>
 
       {!feedback && stickyAction ? (
-        <View style={styles.stickyFoot}>
+        <View style={[styles.stickyFoot, { paddingBottom: 16 + Math.max(insets.bottom, 0) }]}>
           <Btn label={stickyAction.label} disabled={stickyAction.disabled} onPress={stickyAction.onPress} />
         </View>
       ) : null}
@@ -493,6 +514,7 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
           xp={feedback.correct ? 1 : 0}
           label={outOfHearts ? 'See results' : index + 1 >= total ? 'See results' : 'Continue'}
           onNext={advance}
+          bottomInset={insets.bottom}
         />
       ) : null}
 
@@ -503,12 +525,22 @@ export function PlayerScreen({ params, nav }: { params: Params; nav: Nav }) {
         gems={state.gems}
         nextIn={nextIn}
         onRefill={() => {
-          refillWithGems();
-          setHearts(state.hearts);
+          if (refillWithGems()) playSound('levelUp');
         }}
         onOpenShop={() => {
           setHeartsModal(false);
-          nav.tab('home');
+          setShopModal(true);
+        }}
+      />
+
+      <ShopModal
+        visible={shopModal}
+        onClose={() => setShopModal(false)}
+        gems={state.gems}
+        hearts={hearts}
+        onBuy={(kind) => {
+          const ok = kind === 'full' ? refillWithGems() : buyOneHeart();
+          playSound(ok ? 'levelUp' : 'wrong');
         }}
       />
 

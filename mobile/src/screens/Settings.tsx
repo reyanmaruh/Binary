@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { playSound, setSoundEnabled } from '../audio';
 import { ConfirmModal } from '../components/Modals';
 import { Text, TextInput } from '../components/Text';
 import { Btn, Card, PageHead } from '../components/UI';
@@ -18,6 +19,14 @@ export function SettingsScreen({ nav }: { nav: Nav }) {
   const [saved, setSaved] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const reduced = state.settings.reducedMotion;
+
+  const onToggle = (key: 'sound' | 'haptics' | 'reducedMotion') => {
+    const next = !state.settings[key];
+    toggleSetting(key);
+    // Sound has to be flipped before the preview plays so the off state is silent.
+    if (key === 'sound') setSoundEnabled(next);
+    playSound(next ? 'toggleOn' : 'toggleOff');
+  };
 
   const save = () => {
     let parsedAge: number | null = null;
@@ -43,16 +52,22 @@ export function SettingsScreen({ nav }: { nav: Nav }) {
       <FadeIn from={10} enabled={!reduced}>
         <Card style={{ paddingVertical: 8 }}>
           <Row
+            title="Sound effects"
+            desc="Soft synthesized cues for answers and rewards."
+            value={state.settings.sound}
+            onChange={() => onToggle('sound')}
+          />
+          <Row
             title="Haptics"
             desc="A light tap on answers and purchases."
             value={state.settings.haptics}
-            onChange={() => toggleSetting('haptics')}
+            onChange={() => onToggle('haptics')}
           />
           <Row
             title="Reduced motion"
-            desc="No floating mascot or popping cards."
+            desc="No floating mascot, confetti or popping cards."
             value={state.settings.reducedMotion}
-            onChange={() => toggleSetting('reducedMotion')}
+            onChange={() => onToggle('reducedMotion')}
             last
           />
         </Card>

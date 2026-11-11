@@ -1,6 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CONFIG } from '../data/curriculum';
 import { Press3D, Tap } from '../motion';
 import { C, R, T } from '../theme';
@@ -20,6 +21,7 @@ export function Sheet({
   children: React.ReactNode;
 }) {
   const [rendered, setRendered] = useState(visible);
+  const insets = useSafeAreaInsets();
   const fade = useRef(new Animated.Value(0)).current;
   const rise = useRef(new Animated.Value(1)).current;
 
@@ -50,6 +52,7 @@ export function Sheet({
         <Animated.View
           style={[
             styles.sheet,
+            { paddingBottom: 24 + Math.max(insets.bottom, 8) },
             { transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [0, 520] }) }] },
           ]}
         >
@@ -120,17 +123,28 @@ export function HeartsModal({
           <HeartTank key={i} state={i < hearts ? 'full' : i === hearts ? 'next' : 'empty'} />
         ))}
       </View>
+      <View style={styles.heartsCount}>
+        <Ionicons name={hearts > 0 ? 'heart' : 'heart-outline'} size={13} color={C.red} />
+        <Text style={styles.heartsCountText}>
+          {hearts} of {CONFIG.heartsMax} hearts
+        </Text>
+      </View>
       <Text style={styles.timer}>{full ? 'Full' : fmtCountdown(nextIn)}</Text>
       <Text style={styles.timerLabel}>{full ? 'all hearts ready' : 'until your next heart'}</Text>
       <Text style={styles.note}>
-        {hearts === 0
-          ? `You have ${gems} gems. Refill now, or wait for the timer.`
-          : `One heart every ${CONFIG.heartsRefillMinutes} minutes. You have ${gems} gems.`}
+        {full
+          ? 'You are ready for a full lesson. Practice never costs hearts.'
+          : hearts === 0
+            ? `Refill now, or wait for the timer. You have ${gems} gems.`
+            : `One heart every ${CONFIG.heartsRefillMinutes} minutes. You have ${gems} gems.`}
       </Text>
+      {!full && gems < 50 ? (
+        <Text style={styles.shortNote}>{50 - gems} more gems needed to refill.</Text>
+      ) : null}
       <Text style={styles.always}>Practice never costs hearts.</Text>
       <View style={{ gap: 10, marginTop: 16 }}>
         <Btn label={full ? 'Hearts are full' : 'Refill · 50 gems'} disabled={full || gems < 50} onPress={onRefill} />
-        <Btn label="Get gems" variant="secondary" onPress={onOpenShop} />
+        <Btn label="Open gem shop" variant="secondary" onPress={onOpenShop} />
         <Btn label="Close" variant="ghost" onPress={onClose} />
       </View>
     </Sheet>
@@ -164,36 +178,51 @@ export function ShopModal({
   return (
     <Sheet visible={visible} onClose={onClose}>
       <Text style={styles.title}>Gem shop</Text>
-      <View style={styles.balance}>
-        <Ionicons name="diamond" size={18} color={C.beet} />
-        <Text style={styles.balanceText}>{gems} gems</Text>
+      <View style={styles.shopStatus}>
+        <View style={styles.balance}>
+          <Ionicons name="diamond" size={18} color={C.beet} />
+          <Text style={styles.balanceText}>{gems} gems</Text>
+        </View>
+        <View style={styles.shopHeartLine}>
+          <Ionicons name={hearts > 0 ? 'heart' : 'heart-outline'} size={13} color={C.red} />
+          <Text style={styles.shopHeartText}>
+            {hearts} / {CONFIG.heartsMax} hearts{full ? ' · full' : ''}
+          </Text>
+        </View>
       </View>
       <View style={{ gap: 10 }}>
-        {rows.map((row) => (
-          <Press3D
-            key={row.kind}
-            disabled={row.disabled}
-            onPress={() => onBuy(row.kind)}
-            bg={C.paper}
-            shadowColor={row.disabled ? 'transparent' : C.swan}
-            radius={R.md}
-            depth={3}
-            accessibilityLabel={row.title}
-            contentStyle={styles.shopItem}
-          >
-            <View style={styles.shopIco}>
-              <Ionicons name="heart" size={18} color={C.red} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.shopTitle}>{row.title}</Text>
-              <Text style={styles.shopDesc}>{row.desc}</Text>
-            </View>
-            <View style={styles.price}>
-              <Ionicons name="diamond" size={14} color={C.beet} />
-              <Text style={styles.priceText}>{row.price}</Text>
-            </View>
-          </Press3D>
-        ))}
+        {rows.map((row) => {
+          const short = !full && gems < row.price;
+          return (
+            <Press3D
+              key={row.kind}
+              disabled={row.disabled}
+              onPress={() => onBuy(row.kind)}
+              bg={C.paper}
+              shadowColor={row.disabled ? 'transparent' : C.swan}
+              radius={R.md}
+              depth={3}
+              accessibilityLabel={row.title}
+              contentStyle={[styles.shopItem, row.disabled ? styles.shopItemOff : null]}
+            >
+              <View style={[styles.shopIco, row.disabled ? styles.shopIcoOff : null]}>
+                <Ionicons name="heart" size={18} color={row.disabled ? C.mute : C.red} />
+              </View>
+              <View style={styles.shopTxt}>
+                <Text style={styles.shopTitle} numberOfLines={1}>
+                  {row.title}
+                </Text>
+                <Text style={styles.shopDesc} numberOfLines={2}>
+                  {full ? 'Your hearts are already full' : short ? `${row.price - gems} more gems needed` : row.desc}
+                </Text>
+              </View>
+              <View style={[styles.price, row.disabled ? styles.priceOff : null]}>
+                <Ionicons name="diamond" size={13} color={row.disabled ? C.mute : C.beet} />
+                <Text style={[styles.priceText, row.disabled ? styles.priceTextOff : null]}>{row.price}</Text>
+              </View>
+            </Press3D>
+          );
+        })}
       </View>
       <Text style={styles.note}>
         Gems come from first clears and new personal bests. Hearts refill on their own every {CONFIG.heartsRefillMinutes}{' '}
@@ -484,26 +513,77 @@ const styles = StyleSheet.create({
   },
   timer: { fontSize: 26, fontWeight: '700', letterSpacing: -0.5, color: C.graphite, textAlign: 'center', fontVariant: ['tabular-nums'] },
   timerLabel: { ...T.label, textAlign: 'center', marginTop: 2 },
+  heartsCount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    marginTop: 12,
+  },
+  heartsCountText: { fontSize: 12, fontWeight: '700', color: C.ash, letterSpacing: 0.2 },
   note: { ...T.tiny, textAlign: 'center', marginTop: 12, lineHeight: 18 },
+  shortNote: { fontSize: 12, fontWeight: '600', color: C.orangeDeep, textAlign: 'center', marginTop: 6 },
   always: { fontSize: 12, fontWeight: '600', color: C.ash, textAlign: 'center', marginTop: 12 },
-  balance: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginVertical: 12 },
-  balanceText: { fontSize: 16, fontWeight: '700', color: C.beet },
+  shopStatus: { alignItems: 'center', marginBottom: 16 },
+  balance: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    alignSelf: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: R.pill,
+    backgroundColor: C.gemBg,
+    borderWidth: 2,
+    borderColor: C.gemLine,
+  },
+  balanceText: { fontSize: 16, fontWeight: '700', color: C.beet, fontVariant: ['tabular-nums'] },
+  shopHeartLine: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8 },
+  shopHeartText: { fontSize: 12, fontWeight: '600', color: C.ash },
   shopItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    minHeight: 62,
     borderWidth: 2,
     borderColor: C.swan,
-    borderBottomWidth: 0,
     borderRadius: R.md,
-    padding: 12,
+    paddingVertical: 11,
+    paddingHorizontal: 12,
     backgroundColor: C.paper,
   },
-  shopIco: { width: 38, height: 38, borderRadius: 19, backgroundColor: C.heartPale, alignItems: 'center', justifyContent: 'center' },
-  shopTitle: { fontSize: 15, fontWeight: '700', color: C.graphite },
-  shopDesc: { fontSize: 12.5, fontWeight: '500', color: C.ash, marginTop: 2 },
-  price: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  shopItemOff: { backgroundColor: C.polar, borderColor: '#ededed' },
+  shopIco: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: C.heartPale,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  shopIcoOff: { backgroundColor: C.polar },
+  shopTxt: { flex: 1, minWidth: 0 },
+  shopTitle: { fontSize: 15, fontWeight: '700', color: C.graphite, lineHeight: 19 },
+  shopDesc: { fontSize: 12.5, fontWeight: '500', color: C.ash, marginTop: 2, lineHeight: 17 },
+  price: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    minWidth: 52,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: R.pill,
+    backgroundColor: C.gemBg,
+    borderWidth: 2,
+    borderColor: C.gemLine,
+    flexShrink: 0,
+  },
+  priceOff: { backgroundColor: C.polar, borderColor: C.swan },
   priceText: { fontSize: 14, fontWeight: '700', color: C.beet, fontVariant: ['tabular-nums'] },
+  priceTextOff: { color: C.mute },
   sheetHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 6 },
   sheetClose: {
     width: 34,
